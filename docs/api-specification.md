@@ -21,9 +21,7 @@
     "productName": "상품명",
     "description": "상세한 상품 설명...",
     "price": 29900,
-    "stockQuantity": 100,
-    "createdAt": "2024-01-10T09:00:00",
-    "updatedAt": "2024-01-15T10:30:00"
+    "stockQuantity": 100
   },
   "error": null
 }
@@ -77,19 +75,15 @@
 
 **Response** `200 OK`
 ```json
-{
-  "content": [
+[
     {
       "productId": 1,
       "productName": "상품명",
-      "description": "상품 설명",
+      "description": "상세한 상품 설명...",
       "price": 29900,
-      "stockQuantity": 100,
-      "createdAt": "2024-01-10T09:00:00",
-      "updatedAt": "2024-01-15T10:30:00"
+      "stockQuantity": 100
     }
-  ]
-}
+]
 ```
 
 ---
@@ -109,9 +103,7 @@
   "productName": "상품명",
   "description": "상세한 상품 설명...",
   "price": 29900,
-  "stockQuantity": 100,
-  "createdAt": "2024-01-10T09:00:00",
-  "updatedAt": "2024-01-15T10:30:00"
+  "stockQuantity": 100
 }
 ```
 
@@ -151,8 +143,7 @@
 
 **Response** `200 OK`
 ```json
-{
-  "statistics": [
+[
     {
       "rank": 1,
       "productId": 1,
@@ -167,12 +158,7 @@
       "totalOrderQuantity": 120,
       "orderCount": 38
     }
-  ],
-  "period": {
-    "from": "2024-01-17T00:00:00",
-    "to": "2024-01-20T23:59:59"
-  }
-}
+]
 ```
 
 ---
@@ -213,8 +199,7 @@
 
 **Response** `200 OK`
 ```json
-{
-  "content": [
+[
     {
       "pointHistoryId": 1,
       "userId": 1,
@@ -233,8 +218,7 @@
       "balanceAfter": 150000,
       "createdAt": "2024-01-20T11:00:00"
     }
-  ]
-}
+]
 ```
 
 **Error Responses**
@@ -255,21 +239,19 @@
 
 **Response** `200 OK`
 ```json
-{
-  "userId": 1,
-  "items": [
+[
     {
       "cartItemId": 1,
-      "product": {
-        "productId": 1,
-        "productName": "상품명",
-        "price": 29900,
-        "stockQuantity": 100
-      },
-      "quantity": 2
+      "userId": 1,
+      "productId": 1,
+      "productName": "상품명",
+      "price": 29900,
+      "stockQuantity": 100,
+      "quantity": 2,
+      "subtotal": 59800
     }
-  ]
-}
+]
+
 ```
 
 **Error Responses**
@@ -298,13 +280,13 @@
 ```json
 {
   "cartItemId": 1,
-  "product": {
-    "productId": 1,
-    "productName": "상품명",
-    "price": 29900
-  },
+  "userId": 1,
+  "productId": 1,
+  "productName": "상품명",
+  "price": 29900,
+  "stockQuantity": 100,
   "quantity": 2,
-  "createdAt": "2024-01-20T14:00:00"
+  "subtotal": 59800
 }
 ```
 
@@ -336,13 +318,13 @@
 ```json
 {
   "cartItemId": 1,
-  "product": {
-    "productId": 1,
-    "productName": "상품명",
-    "price": 29900
-  },
-  "quantity": 3,
-  "updatedAt": "2024-01-20T14:30:00"
+  "userId": 1,
+  "productId": 1,
+  "productName": "상품명",
+  "price": 29900,
+  "stockQuantity": 100,
+  "quantity": 2,
+  "subtotal": 59800
 }
 ```
 
@@ -380,8 +362,7 @@
 
 **Response** `200 OK`
 ```json
-{
-  "coupons": [
+[
     {
       "couponId": 1,
       "name": "신규 가입 쿠폰",
@@ -404,8 +385,7 @@
       "validFrom": "2024-01-15T00:00:00",
       "validUntil": "2024-01-31T23:59:59"
     }
-  ]
-}
+]
 ```
 
 ---
@@ -426,22 +406,6 @@
 ```
 
 **Response** `201 Created`
-```json
-{
-  "userCouponId": 1,
-  "userId": 1,
-  "coupon": {
-    "couponId": 1,
-    "name": "신규 가입 쿠폰",
-    "discountType": "FIXED",
-    "discountValue": 5000,
-    "validFrom": "2024-01-01T00:00:00",
-    "validUntil": "2024-12-31T23:59:59"
-  },
-  "status": "ISSUED",
-  "issuedAt": "2024-01-20T15:00:00"
-}
-```
 
 **Error Responses**
 
@@ -463,39 +427,34 @@
 
 **Response** `200 OK`
 ```json
-{
-  "userId": 1,
-  "coupons": [
+[
     {
       "userCouponId": 1,
-      "coupon": {
-        "couponId": 1,
-        "name": "신규 가입 쿠폰",
-        "discountType": "FIXED",
-        "discountValue": 5000,
-        "validFrom": "2024-01-01T00:00:00",
-        "validUntil": "2024-12-31T23:59:59"
-      },
+      "userId": 1,
+      "couponId": 1,
+      "name": "신규 가입 쿠폰",
+      "discountType": "FIXED",
+      "discountValue": 5000,
+      "validFrom": "2024-01-01T00:00:00",
+      "validUntil": "2024-12-31T23:59:59",
       "status": "ISSUED",
       "issuedAt": "2024-01-20T15:00:00",
       "usedAt": null
     },
     {
       "userCouponId": 2,
-      "coupon": {
-        "couponId": 2,
-        "name": "10% 할인 쿠폰",
-        "discountType": "PERCENTAGE",
-        "discountValue": 10,
-        "validFrom": "2024-01-15T00:00:00",
-        "validUntil": "2024-01-31T23:59:59"
-      },
-      "status": "USED",
-      "issuedAt": "2024-01-15T10:00:00",
-      "usedAt": "2024-01-18T14:30:00"
+      "userId": 1,
+      "couponId": 2,
+      "name": "10% 할인 쿠폰",
+      "discountType": "PERCENTAGE",
+      "discountValue": 10,
+      "validFrom": "2024-01-01T00:00:00",
+      "validUntil": "2024-12-31T23:59:59",
+      "status": "ISSUED",
+      "issuedAt": "2024-01-20T15:00:00",
+      "usedAt": "2024-05-20T15:00:00"
     }
-  ]
-}
+]
 ```
 
 **Error Responses**
@@ -533,12 +492,10 @@
   "ordererName" : "홍길동",
   "deliveryAddress": "서울시 강남구 테헤란로 123",
   "orderedAt": "2024-01-20T16:30:00",
-  "appliedCoupon": {
-    "userCouponId": 1,
-    "couponName": "신규 가입 쿠폰",
-    "discountType": "FIXED",
-    "discountValue": 5000
-  },
+  "userCouponId": 1,
+  "couponName": "신규 가입 쿠폰",
+  "discountType": "FIXED",
+  "discountValue": 5000,
   "items": [
     {
       "orderItemId": 1,
@@ -574,8 +531,7 @@
 
 **Response** `200 OK`
 ```json
-{
-  "content": [
+[
     {
       "orderId": 1,
       "totalAmount": 59800,
@@ -585,8 +541,7 @@
       "orderedAt": "2024-01-20T16:30:00",
       "updatedAt": "2024-01-20T16:35:00"
     }
-  ]
-}
+]
 ```
 
 **Error Responses**
@@ -617,12 +572,10 @@
   "deliveryAddress": "서울시 강남구 테헤란로 123",
   "orderedAt": "2024-01-20T16:30:00",
   "updatedAt": "2024-01-20T16:35:00",
-  "appliedCoupon": {
-    "userCouponId": 1,
-    "couponName": "신규 가입 쿠폰",
-    "discountType": "FIXED",
-    "discountValue": 5000
-  },
+  "userCouponId": 1,
+  "couponName": "신규 가입 쿠폰",
+  "discountType": "FIXED",
+  "discountValue": 5000,
   "items": [
     {
       "orderItemId": 1,
@@ -665,12 +618,10 @@
   "ordererName" : "홍길동",
   "deliveryAddress": "서울시 강남구 테헤란로 123",
   "orderedAt": "2024-01-20T16:30:00",
-  "appliedCoupon": {
-    "userCouponId": 1,
-    "couponName": "신규 가입 쿠폰",
-    "discountType": "FIXED",
-    "discountValue": 5000
-  },
+  "userCouponId": 1,
+  "couponName": "신규 가입 쿠폰",
+  "discountType": "FIXED",
+  "discountValue": 5000,
   "items": [
     {
       "orderItemId": 1,
