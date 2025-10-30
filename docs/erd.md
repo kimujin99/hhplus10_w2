@@ -226,9 +226,9 @@ CREATE INDEX idx_order_status ON ORDER(status);
 CREATE INDEX idx_order_date ON ORDER(orderd_at);
 
 -- ORDER_ITEM
-CREATE INDEX idx_order_product_order ON ORDER_ITEM(order_id);
-CREATE INDEX idx_order_product_product ON ORDER_ITEM(product_id);
-CREATE INDEX idx_order_product_created ON ORDER_ITEM(created_at); -- 인기 상품 통계용
+CREATE INDEX idx_order_item_order ON ORDER_ITEM(order_id);
+CREATE INDEX idx_order_item_product ON ORDER_ITEM(product_id);
+CREATE INDEX idx_order_item_created ON ORDER_ITEM(created_at); -- 인기 상품 통계용
 
 -- POINT_HISTORY
 CREATE INDEX idx_point_history_user ON POINT_HISTORY(user_id);

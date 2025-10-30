@@ -302,9 +302,9 @@ CREATE INDEX idx_order_status ON ORDER(status);
 CREATE INDEX idx_order_date ON ORDER(orderd_at);
 
 -- ORDER_ITEM
-CREATE INDEX idx_order_product_order ON ORDER_ITEM(order_id);
-CREATE INDEX idx_order_product_product ON ORDER_ITEM(product_id);
-CREATE INDEX idx_order_product_created ON ORDER_ITEM(created_at); -- 인기 상품 통계용
+CREATE INDEX idx_order_item_order ON ORDER_ITEM(order_id);
+CREATE INDEX idx_order_item_product ON ORDER_ITEM(product_id);
+CREATE INDEX idx_order_item_created ON ORDER_ITEM(created_at); -- 인기 상품 통계용
 
 -- POINT_HISTORY
 CREATE INDEX idx_point_history_user ON POINT_HISTORY(user_id);
@@ -401,9 +401,7 @@ LIMIT 5;
     "productName": "상품명",
     "description": "상세한 상품 설명...",
     "price": 29900,
-    "stockQuantity": 100,
-    "createdAt": "2024-01-10T09:00:00",
-    "updatedAt": "2024-01-15T10:30:00"
+    "stockQuantity": 100
   },
   "error": null
 }
@@ -457,19 +455,15 @@ LIMIT 5;
 
 **Response** `200 OK`
 ```json
-{
-  "content": [
-    {
-      "productId": 1,
-      "productName": "상품명",
-      "description": "상품 설명",
-      "price": 29900,
-      "stockQuantity": 100,
-      "createdAt": "2024-01-10T09:00:00",
-      "updatedAt": "2024-01-15T10:30:00"
-    }
-  ]
-}
+[
+  {
+    "productId": 1,
+    "productName": "상품명",
+    "description": "상세한 상품 설명...",
+    "price": 29900,
+    "stockQuantity": 100
+  }
+]
 ```
 
 ---
@@ -489,9 +483,7 @@ LIMIT 5;
   "productName": "상품명",
   "description": "상세한 상품 설명...",
   "price": 29900,
-  "stockQuantity": 100,
-  "createdAt": "2024-01-10T09:00:00",
-  "updatedAt": "2024-01-15T10:30:00"
+  "stockQuantity": 100
 }
 ```
 
@@ -531,28 +523,22 @@ LIMIT 5;
 
 **Response** `200 OK`
 ```json
-{
-  "statistics": [
-    {
-      "rank": 1,
-      "productId": 1,
-      "productName": "인기 상품 1",
-      "totalOrderQuantity": 150,
-      "orderCount": 45
-    },
-    {
-      "rank": 2,
-      "productId": 5,
-      "productName": "인기 상품 2",
-      "totalOrderQuantity": 120,
-      "orderCount": 38
-    }
-  ],
-  "period": {
-    "from": "2024-01-17T00:00:00",
-    "to": "2024-01-20T23:59:59"
+[
+  {
+    "rank": 1,
+    "productId": 1,
+    "productName": "인기 상품 1",
+    "totalOrderQuantity": 150,
+    "orderCount": 45
+  },
+  {
+    "rank": 2,
+    "productId": 5,
+    "productName": "인기 상품 2",
+    "totalOrderQuantity": 120,
+    "orderCount": 38
   }
-}
+]
 ```
 
 ---
@@ -593,28 +579,26 @@ LIMIT 5;
 
 **Response** `200 OK`
 ```json
-{
-  "content": [
-    {
-      "pointHistoryId": 1,
-      "userId": 1,
-      "orderId": 5,
-      "transactionType": "USE",
-      "amount": 29900,
-      "balanceAfter": 120100,
-      "createdAt": "2024-01-20T16:40:00"
-    },
-    {
-      "pointHistoryId": 2,
-      "userId": 1,
-      "orderId": null,
-      "transactionType": "CHARGE",
-      "amount": 100000,
-      "balanceAfter": 150000,
-      "createdAt": "2024-01-20T11:00:00"
-    }
-  ]
-}
+[
+  {
+    "pointHistoryId": 1,
+    "userId": 1,
+    "orderId": 5,
+    "transactionType": "USE",
+    "amount": 29900,
+    "balanceAfter": 120100,
+    "createdAt": "2024-01-20T16:40:00"
+  },
+  {
+    "pointHistoryId": 2,
+    "userId": 1,
+    "orderId": null,
+    "transactionType": "CHARGE",
+    "amount": 100000,
+    "balanceAfter": 150000,
+    "createdAt": "2024-01-20T11:00:00"
+  }
+]
 ```
 
 **Error Responses**
@@ -635,21 +619,19 @@ LIMIT 5;
 
 **Response** `200 OK`
 ```json
-{
-  "userId": 1,
-  "items": [
-    {
-      "cartItemId": 1,
-      "product": {
-        "productId": 1,
-        "productName": "상품명",
-        "price": 29900,
-        "stockQuantity": 100
-      },
-      "quantity": 2
-    }
-  ]
-}
+[
+  {
+    "cartItemId": 1,
+    "userId": 1,
+    "productId": 1,
+    "productName": "상품명",
+    "price": 29900,
+    "stockQuantity": 100,
+    "quantity": 2,
+    "subtotal": 59800
+  }
+]
+
 ```
 
 **Error Responses**
@@ -678,13 +660,13 @@ LIMIT 5;
 ```json
 {
   "cartItemId": 1,
-  "product": {
-    "productId": 1,
-    "productName": "상품명",
-    "price": 29900
-  },
+  "userId": 1,
+  "productId": 1,
+  "productName": "상품명",
+  "price": 29900,
+  "stockQuantity": 100,
   "quantity": 2,
-  "createdAt": "2024-01-20T14:00:00"
+  "subtotal": 59800
 }
 ```
 
@@ -716,13 +698,13 @@ LIMIT 5;
 ```json
 {
   "cartItemId": 1,
-  "product": {
-    "productId": 1,
-    "productName": "상품명",
-    "price": 29900
-  },
-  "quantity": 3,
-  "updatedAt": "2024-01-20T14:30:00"
+  "userId": 1,
+  "productId": 1,
+  "productName": "상품명",
+  "price": 29900,
+  "stockQuantity": 100,
+  "quantity": 2,
+  "subtotal": 59800
 }
 ```
 
@@ -760,32 +742,30 @@ LIMIT 5;
 
 **Response** `200 OK`
 ```json
-{
-  "coupons": [
-    {
-      "couponId": 1,
-      "name": "신규 가입 쿠폰",
-      "discountType": "FIXED",
-      "discountValue": 5000,
-      "totalQuantity": 100,
-      "issuedQuantity": 45,
-      "remainingQuantity": 55,
-      "validFrom": "2024-01-01T00:00:00",
-      "validUntil": "2024-12-31T23:59:59"
-    },
-    {
-      "couponId": 2,
-      "name": "10% 할인 쿠폰",
-      "discountType": "PERCENTAGE",
-      "discountValue": 10,
-      "totalQuantity": 50,
-      "issuedQuantity": 50,
-      "remainingQuantity": 0,
-      "validFrom": "2024-01-15T00:00:00",
-      "validUntil": "2024-01-31T23:59:59"
-    }
-  ]
-}
+[
+  {
+    "couponId": 1,
+    "name": "신규 가입 쿠폰",
+    "discountType": "FIXED",
+    "discountValue": 5000,
+    "totalQuantity": 100,
+    "issuedQuantity": 45,
+    "remainingQuantity": 55,
+    "validFrom": "2024-01-01T00:00:00",
+    "validUntil": "2024-12-31T23:59:59"
+  },
+  {
+    "couponId": 2,
+    "name": "10% 할인 쿠폰",
+    "discountType": "PERCENTAGE",
+    "discountValue": 10,
+    "totalQuantity": 50,
+    "issuedQuantity": 50,
+    "remainingQuantity": 0,
+    "validFrom": "2024-01-15T00:00:00",
+    "validUntil": "2024-01-31T23:59:59"
+  }
+]
 ```
 
 ---
@@ -806,22 +786,6 @@ LIMIT 5;
 ```
 
 **Response** `201 Created`
-```json
-{
-  "userCouponId": 1,
-  "userId": 1,
-  "coupon": {
-    "couponId": 1,
-    "name": "신규 가입 쿠폰",
-    "discountType": "FIXED",
-    "discountValue": 5000,
-    "validFrom": "2024-01-01T00:00:00",
-    "validUntil": "2024-12-31T23:59:59"
-  },
-  "status": "ISSUED",
-  "issuedAt": "2024-01-20T15:00:00"
-}
-```
 
 **Error Responses**
 
@@ -843,39 +807,34 @@ LIMIT 5;
 
 **Response** `200 OK`
 ```json
-{
-  "userId": 1,
-  "coupons": [
+[
     {
       "userCouponId": 1,
-      "coupon": {
-        "couponId": 1,
-        "name": "신규 가입 쿠폰",
-        "discountType": "FIXED",
-        "discountValue": 5000,
-        "validFrom": "2024-01-01T00:00:00",
-        "validUntil": "2024-12-31T23:59:59"
-      },
+      "userId": 1,
+      "couponId": 1,
+      "name": "신규 가입 쿠폰",
+      "discountType": "FIXED",
+      "discountValue": 5000,
+      "validFrom": "2024-01-01T00:00:00",
+      "validUntil": "2024-12-31T23:59:59",
       "status": "ISSUED",
       "issuedAt": "2024-01-20T15:00:00",
       "usedAt": null
     },
     {
       "userCouponId": 2,
-      "coupon": {
-        "couponId": 2,
-        "name": "10% 할인 쿠폰",
-        "discountType": "PERCENTAGE",
-        "discountValue": 10,
-        "validFrom": "2024-01-15T00:00:00",
-        "validUntil": "2024-01-31T23:59:59"
-      },
-      "status": "USED",
-      "issuedAt": "2024-01-15T10:00:00",
-      "usedAt": "2024-01-18T14:30:00"
+      "userId": 1,
+      "couponId": 2,
+      "name": "10% 할인 쿠폰",
+      "discountType": "PERCENTAGE",
+      "discountValue": 10,
+      "validFrom": "2024-01-01T00:00:00",
+      "validUntil": "2024-12-31T23:59:59",
+      "status": "ISSUED",
+      "issuedAt": "2024-01-20T15:00:00",
+      "usedAt": "2024-05-20T15:00:00"
     }
-  ]
-}
+]
 ```
 
 **Error Responses**
@@ -913,12 +872,10 @@ LIMIT 5;
   "ordererName" : "홍길동",
   "deliveryAddress": "서울시 강남구 테헤란로 123",
   "orderedAt": "2024-01-20T16:30:00",
-  "appliedCoupon": {
-    "userCouponId": 1,
-    "couponName": "신규 가입 쿠폰",
-    "discountType": "FIXED",
-    "discountValue": 5000
-  },
+  "userCouponId": 1,
+  "couponName": "신규 가입 쿠폰",
+  "discountType": "FIXED",
+  "discountValue": 5000,
   "items": [
     {
       "orderItemId": 1,
@@ -954,8 +911,7 @@ LIMIT 5;
 
 **Response** `200 OK`
 ```json
-{
-  "content": [
+[
     {
       "orderId": 1,
       "totalAmount": 59800,
@@ -965,8 +921,7 @@ LIMIT 5;
       "orderedAt": "2024-01-20T16:30:00",
       "updatedAt": "2024-01-20T16:35:00"
     }
-  ]
-}
+]
 ```
 
 **Error Responses**
@@ -997,12 +952,10 @@ LIMIT 5;
   "deliveryAddress": "서울시 강남구 테헤란로 123",
   "orderedAt": "2024-01-20T16:30:00",
   "updatedAt": "2024-01-20T16:35:00",
-  "appliedCoupon": {
-    "userCouponId": 1,
-    "couponName": "신규 가입 쿠폰",
-    "discountType": "FIXED",
-    "discountValue": 5000
-  },
+  "userCouponId": 1,
+  "couponName": "신규 가입 쿠폰",
+  "discountType": "FIXED",
+  "discountValue": 5000,
   "items": [
     {
       "orderItemId": 1,
@@ -1045,12 +998,10 @@ LIMIT 5;
   "ordererName" : "홍길동",
   "deliveryAddress": "서울시 강남구 테헤란로 123",
   "orderedAt": "2024-01-20T16:30:00",
-  "appliedCoupon": {
-    "userCouponId": 1,
-    "couponName": "신규 가입 쿠폰",
-    "discountType": "FIXED",
-    "discountValue": 5000
-  },
+  "userCouponId": 1,
+  "couponName": "신규 가입 쿠폰",
+  "discountType": "FIXED",
+  "discountValue": 5000,
   "items": [
     {
       "orderItemId": 1,
@@ -1083,28 +1034,28 @@ LIMIT 5;
 ### 주문 및 결제 프로세스
 
 1. **주문 생성** (`POST /orders`)
-   - 장바구니 항목 검증
-   - 재고 확인 및 차감
-   - 쿠폰 적용 (선택적)
-   - 쿠폰 사용 처리 (status: ISSUED → USED)
-   - 주문 생성 (status: PENDING)
-   - ORDER_ITEM에 상품 스냅샷 저장
+    - 장바구니 항목 검증
+    - 재고 확인 및 차감
+    - 쿠폰 적용 (선택적)
+    - 쿠폰 사용 처리 (status: ISSUED → USED)
+    - 주문 생성 (status: PENDING)
+    - ORDER_ITEM에 상품 스냅샷 저장
 
 2. **결제 생성** (`POST /orders/{orderId}/payments`)
-   - 포인트 잔액 검증
-   - 포인트 차감
-   - POINT_HISTORY 기록 생성 (transaction_type: USE)
-   - 성공 시: 주문 상태 → CONFIRMED
-   - 실패 시: 보상 트랜잭션 (재고 복원, 쿠폰 복원, 주문 상태 → FAILED)
+    - 포인트 잔액 검증
+    - 포인트 차감
+    - POINT_HISTORY 기록 생성 (transaction_type: USE)
+    - 성공 시: 주문 상태 → CONFIRMED
+    - 실패 시: 보상 트랜잭션 (재고 복원, 쿠폰 복원, 주문 상태 → FAILED)
 
 ### 쿠폰 발급 프로세스 (선착순)
 
 1. **쿠폰 발급** (`POST /users/{userId}/coupons`)
-   - 쿠폰 유효기간 검증
-   - 남은 수량 검증 (issued_quantity < total_quantity)
-   - 중복 발급 검증 (user_id + coupon_id 유니크)
-   - issued_quantity 증가
-   - USER_COUPON 생성 (status: ISSUED)
+    - 쿠폰 유효기간 검증
+    - 남은 수량 검증 (issued_quantity < total_quantity)
+    - 중복 발급 검증 (user_id + coupon_id 유니크)
+    - issued_quantity 증가
+    - USER_COUPON 생성 (status: ISSUED)
 ---
 
 # 시퀀스 다이어그램
