@@ -117,7 +117,7 @@ sequenceDiagram
     end
 
     OrderService->>OrderRepository: 주문 정보 저장 (status: PENDING)
-    OrderRepository->>OrderRepository: ORDER 및 ORDER_PRODUCT 저장
+    OrderRepository->>OrderRepository: ORDER 및 ORDER_ITEM 저장
     OrderRepository-->>OrderService: 저장 완료
     OrderService-->>Client: 201 Created + 주문 정보
 ```

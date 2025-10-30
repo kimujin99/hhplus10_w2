@@ -91,7 +91,7 @@ flowchart TD
     V --> W
 
     W --> X[ORDER 생성<br/>status: PENDING]
-    X --> Y[ORDER_PRODUCT 생성<br/>상품 스냅샷 저장]
+    X --> Y[ORDER_ITEM 생성<br/>상품 스냅샷 저장]
     Y --> Z[장바구니 항목 삭제]
     Z --> AA[트랜잭션 커밋]
     AA --> AB[201 Created 주문 정보 반환]
