@@ -5,6 +5,7 @@
 ## 목차
 - [요구사항 정의서](#요구사항-정의서)
 - [ERD](#erd-entity-relationship-diagram)
+- [Swagger API 정적 호스팅](#swagger-api)
 - [API 명세서](#api-명세서)
 - [시퀀스 다이어그램](#시퀀스-다이어그램)
 - [플로우차트](#플로우차트)
@@ -376,6 +377,12 @@ GROUP BY op.product_id, p.product_name
 ORDER BY total_quantity DESC
 LIMIT 5;
 ```
+---
+
+# swagger-api
+
+https://kimujin99.github.io/hhplus10_w2/
+
 ---
 
 # API 명세서
