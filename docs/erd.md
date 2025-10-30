@@ -4,6 +4,9 @@
 
 ```mermaid
 erDiagram
+    PRODUCT ||--o{ ORDER_PRODUCT : ""
+    PRODUCT ||--o{ CART_ITEM : ""
+    
     USER ||--o{ ORDER : ""
     USER ||--o{ CART_ITEM : ""
     USER ||--o{ USER_COUPON : ""
@@ -13,14 +16,12 @@ erDiagram
     ORDER ||--o| USER_COUPON : ""
     ORDER ||--|{ POINT_HISTORY : ""
 
-    PRODUCT ||--o{ ORDER_PRODUCT : ""
-    PRODUCT ||--o{ CART_ITEM : ""
-
     COUPON ||--o{ USER_COUPON : ""
 
     USER {
         bigint user_id PK
-        bigint point
+        varchar user_name
+        bigint point_balance
         datetime created_at
         datetime updated_at
     }
@@ -31,6 +32,7 @@ erDiagram
         bigint total_amount
         bigint discount_amount
         varchar status "PENDING, CONFIRMED, FAILED, CANCELLED"
+        varchar orderer_name
         varchar delivery_address
         datetime orderd_at
         datetime updated_at
@@ -60,7 +62,7 @@ erDiagram
         bigint order_id FK
         bigint product_id FK
         int quantity
-        varchar name
+        varchar product_name
         bigint price
         datetime created_at
     }
@@ -104,7 +106,8 @@ erDiagram
 - **Primary Key**: user_id
 - **Description**: 사용자 정보를 저장하는 테이블
 - **Fields**:
-  - point: 사용자의 현재 포인트 잔액
+  - name: 사용자의 이름
+  - point_balance: 사용자의 현재 포인트 잔액
 
 ### 2. ORDER (주문)
 - **Primary Key**: order_id
@@ -114,6 +117,7 @@ erDiagram
   - total_amount: 총 주문 금액
   - discount_amount: 쿠폰 할인 금액
   - status: 주문 상태
+  - orderer_name: 주문자명
   - delivery_address: 배송지 주소
 - **Status Values**:
   - PENDING (대기 - 주문 생성됨, 재고/쿠폰 차감됨)
@@ -151,7 +155,7 @@ erDiagram
 - **Description**: 주문에 포함된 개별 상품 정보
 - **Fields**:
   - quantity: 주문 수량
-  - name: 주문 당시 상품명 (스냅샷)
+  - product_name: 주문 당시 상품명 (스냅샷)
   - price: 주문 당시 상품 가격 (스냅샷)
 - **Note**:
   - name과 price는 주문 당시의 값을 저장 (가격/상품명 변동 이력 보존)
