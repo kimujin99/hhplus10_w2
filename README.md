@@ -80,7 +80,7 @@
 
 ```mermaid
 erDiagram
-    PRODUCT ||--o{ ORDER_PRODUCT : ""
+    PRODUCT ||--o{ ORDER_ITEM : ""
     PRODUCT ||--o{ CART_ITEM : ""
     
     USER ||--o{ ORDER : ""
@@ -88,7 +88,7 @@ erDiagram
     USER ||--o{ USER_COUPON : ""
     USER ||--o{ POINT_HISTORY : ""
 
-    ORDER ||--|{ ORDER_PRODUCT : ""
+    ORDER ||--|{ ORDER_ITEM : ""
     ORDER ||--o| USER_COUPON : ""
     ORDER ||--|{ POINT_HISTORY : ""
 
@@ -133,7 +133,7 @@ erDiagram
         datetime updated_at
     }
 
-    ORDER_PRODUCT {
+    ORDER_ITEM {
         bigint order_item_id PK
         bigint order_id FK
         bigint product_id FK
@@ -223,7 +223,7 @@ erDiagram
   - quantity: 장바구니에 담은 수량
 - **Note**: 같은 사용자-상품 조합은 유니크해야 함 (quantity로 수량 관리)
 
-### 5. ORDER_PRODUCT (주문 상품)
+### 5. ORDER_ITEM (주문 상품)
 - **Primary Key**: order_item_id
 - **Foreign Keys**:
   - order_id → ORDER
@@ -235,7 +235,7 @@ erDiagram
   - price: 주문 당시 상품 가격 (스냅샷)
 - **Note**:
   - name과 price는 주문 당시의 값을 저장 (가격/상품명 변동 이력 보존)
-  - 인기 상품 통계는 ORDER_PRODUCT의 created_at을 기준으로 집계
+  - 인기 상품 통계는 ORDER_ITEM의 created_at을 기준으로 집계
 
 ### 6. POINT_HISTORY (포인트 거래 이력)
 - **Primary Key**: point_history_id
@@ -301,10 +301,10 @@ CREATE INDEX idx_order_user ON ORDER(user_id);
 CREATE INDEX idx_order_status ON ORDER(status);
 CREATE INDEX idx_order_date ON ORDER(orderd_at);
 
--- ORDER_PRODUCT
-CREATE INDEX idx_order_product_order ON ORDER_PRODUCT(order_id);
-CREATE INDEX idx_order_product_product ON ORDER_PRODUCT(product_id);
-CREATE INDEX idx_order_product_created ON ORDER_PRODUCT(created_at); -- 인기 상품 통계용
+-- ORDER_ITEM
+CREATE INDEX idx_order_product_order ON ORDER_ITEM(order_id);
+CREATE INDEX idx_order_product_product ON ORDER_ITEM(product_id);
+CREATE INDEX idx_order_product_created ON ORDER_ITEM(created_at); -- 인기 상품 통계용
 
 -- POINT_HISTORY
 CREATE INDEX idx_point_history_user ON POINT_HISTORY(user_id);
@@ -327,7 +327,7 @@ CREATE UNIQUE INDEX idx_user_coupon_unique ON USER_COUPON(user_id, coupon_id); -
    - 재고 차감 (PRODUCT.stock_quantity)
    - 쿠폰 사용 처리 (USER_COUPON.status = USED, used_at 설정)
    - 주문 생성 (ORDER.status = PENDING)
-   - ORDER_PRODUCT 생성 (주문 당시 상품명/가격 스냅샷)
+   - ORDER_ITEM 생성 (주문 당시 상품명/가격 스냅샷)
 
 2. **포인트 결제 처리 (트랜잭션)**
    - 포인트 잔액 검증 (USER.point >= 결제 금액)
@@ -361,7 +361,7 @@ CREATE UNIQUE INDEX idx_user_coupon_unique ON USER_COUPON(user_id, coupon_id); -
    - POINT_HISTORY 생성 (transaction_type = REFUND)
 
 ### 인기 상품 통계
-- ORDER_PRODUCT 테이블에서 created_at 기준 최근 3일 데이터 집계
+- ORDER_ITEM 테이블에서 created_at 기준 최근 3일 데이터 집계
 - product_id별 quantity 합산 후 상위 5개 조회
 
 ```sql
@@ -369,7 +369,7 @@ SELECT
     op.product_id,
     p.product_name,
     SUM(op.quantity) as total_quantity
-FROM ORDER_PRODUCT op
+FROM ORDER_ITEM op
 JOIN PRODUCT p ON op.product_id = p.product_id
 WHERE op.created_at >= DATE_SUB(NOW(), INTERVAL 3 DAY)
 GROUP BY op.product_id, p.product_name
@@ -1088,7 +1088,7 @@ LIMIT 5;
    - 쿠폰 적용 (선택적)
    - 쿠폰 사용 처리 (status: ISSUED → USED)
    - 주문 생성 (status: PENDING)
-   - ORDER_PRODUCT에 상품 스냅샷 저장
+   - ORDER_ITEM에 상품 스냅샷 저장
 
 2. **결제 생성** (`POST /orders/{orderId}/payments`)
    - 포인트 잔액 검증
@@ -1226,7 +1226,7 @@ sequenceDiagram
     end
 
     OrderService->>OrderRepository: 주문 정보 저장 (status: PENDING)
-    OrderRepository->>OrderRepository: ORDER 및 ORDER_PRODUCT 저장
+    OrderRepository->>OrderRepository: ORDER 및 ORDER_ITEM 저장
     OrderRepository-->>OrderService: 저장 완료
     OrderService-->>Client: 201 Created + 주문 정보
 ```
@@ -1372,7 +1372,7 @@ flowchart TD
     V --> W
 
     W --> X[ORDER 생성<br/>status: PENDING]
-    X --> Y[ORDER_PRODUCT 생성<br/>상품 스냅샷 저장]
+    X --> Y[ORDER_ITEM 생성<br/>상품 스냅샷 저장]
     Y --> Z[장바구니 항목 삭제]
     Z --> AA[트랜잭션 커밋]
     AA --> AB[201 Created 주문 정보 반환]
