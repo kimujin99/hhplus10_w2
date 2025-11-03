@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>항해플러스 이커머스 API 문서</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+</head>
+<body>
+<div id="swagger-ui"></div>
+
+<script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js" crossorigin></script>
+<script>
+    window.onload = () => {
+        SwaggerUIBundle({
+            url: "openapi.yaml",
+            dom_id: "#swagger-ui",
+            tryItOutEnabled: false
+        });
+    };
+</script>
+</body>
+</html>
