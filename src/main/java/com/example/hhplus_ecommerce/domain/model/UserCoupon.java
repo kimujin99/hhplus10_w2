@@ -1,5 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
+import com.example.hhplus_ecommerce.presentation.common.BusinessException;
+import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,7 +23,7 @@ public class UserCoupon extends BaseEntity {
 
     public void use(Long orderId) {
         if(isUsed()) {
-            throw new IllegalStateException("이미 사용된 쿠폰입니다.");
+            throw new BusinessException(ErrorCode.COUPON_ALREADY_USED, "이미 사용된 쿠폰입니다.");
         }
         this.orderId = orderId;
         this.status = UserCouponStatus.USED;

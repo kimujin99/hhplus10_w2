@@ -1,5 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
+import com.example.hhplus_ecommerce.presentation.common.BusinessException;
+import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -23,10 +25,10 @@ public class Coupon extends BaseEntity {
     public void issue() {
         LocalDateTime now = LocalDateTime.now();
         if(now.isAfter(validUntil)) {
-            throw new IllegalStateException("쿠폰 발급 기간이 종료되었습니다.");
+            throw new BusinessException(ErrorCode.COUPON_EXPIRED, "쿠폰 발급 기간이 종료되었습니다.");
         }
         if(getRemainingQuantity() <= 0) {
-            throw new IllegalStateException("쿠폰이 모두 소진되었습니다.");
+            throw new BusinessException(ErrorCode.COUPON_SOLD_OUT, "쿠폰이 모두 소진되었습니다.");
         }
         this.issuedQuantity++;
         onUpdate();
@@ -43,7 +45,7 @@ public class Coupon extends BaseEntity {
     public Long applyDiscount(Long originalAmount) {
         LocalDateTime now = LocalDateTime.now();
         if(now.isBefore(this.validFrom) || now.isAfter(this.validUntil)) {
-            throw new IllegalStateException("쿠폰이 만료되었습니다.");
+            throw new BusinessException(ErrorCode.COUPON_EXPIRED, "쿠폰이 만료되었습니다.");
         }
         return originalAmount - calculateDiscountAmount(originalAmount);
     }

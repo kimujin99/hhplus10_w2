@@ -1,5 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
+import com.example.hhplus_ecommerce.presentation.common.BusinessException;
+import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
 import lombok.Getter;
 
 @Getter
@@ -12,22 +14,22 @@ public class User extends BaseEntity {
     }
 
     public void usePoint(Long point) {
-        if(point == null || point <= 0) {
-            throw new IllegalArgumentException("사용할 포인트는 0보다 커야합니다.");
+        if(point <= 0) {
+            throw new BusinessException(ErrorCode.INVALID_POINT_AMOUNT, "사용할 포인트는 0보다 커야합니다.");
         }
         if(this.point < point) {
-            throw new IllegalStateException("포인트가 부족합니다.");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_POINT, "포인트가 부족합니다.");
         }
         this.point -= point;
         onUpdate();
     }
 
     public void chargePoint(Long point) {
-        if(point == null || point <= 0) {
-            throw new IllegalArgumentException("충전할 포인트는 0보다 커야합니다.");
+        if(point <= 0) {
+            throw new BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT, "충전할 포인트는 0보다 커야합니다.");
         }
         if(point % 1000 != 0) {
-            throw new IllegalArgumentException("충전은 1000원 단위로 가능합니다.");
+            throw new BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT, "충전은 1000원 단위로 가능합니다.");
         }
         this.point += point;
         onUpdate();

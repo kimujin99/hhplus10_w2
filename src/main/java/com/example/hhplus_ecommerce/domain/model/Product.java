@@ -1,5 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
+import com.example.hhplus_ecommerce.presentation.common.BusinessException;
+import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -28,7 +30,7 @@ public class Product extends BaseEntity {
 
     public void subStockQuantity(Integer stockQuantity) {
         if(this.stockQuantity < stockQuantity) {
-            throw new IllegalStateException("재고가 부족합니다.");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, "재고가 부족합니다.");
         }
         this.stockQuantity -= stockQuantity;
         onUpdate();

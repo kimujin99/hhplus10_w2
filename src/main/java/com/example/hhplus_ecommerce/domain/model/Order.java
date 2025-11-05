@@ -1,5 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
+import com.example.hhplus_ecommerce.presentation.common.BusinessException;
+import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -25,7 +27,7 @@ public class Order extends BaseEntity {
 
     public void confirm() {
         if(this.status != OrderStatus.PENDING) {
-            throw new IllegalStateException("결제할 수 없는 주문 상태입니다.");
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS, "결제할 수 없는 주문 상태입니다.");
         }
         this.status = OrderStatus.CONFIRMED;
         onUpdate();
@@ -33,7 +35,7 @@ public class Order extends BaseEntity {
 
     public void fail() {
         if(this.status != OrderStatus.PENDING) {
-            throw new IllegalStateException("실패 처리할 수 없는 주문 상태입니다.");
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS, "실패 처리할 수 없는 주문 상태입니다.");
         }
         this.status = OrderStatus.FAILED;
         onUpdate();

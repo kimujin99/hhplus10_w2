@@ -1,5 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
+import com.example.hhplus_ecommerce.presentation.common.BusinessException;
+import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -17,7 +19,7 @@ public class CartItem extends BaseEntity {
 
     public void subQuantity() {
         if(this.quantity <= 0) {
-            throw new IllegalArgumentException("상품 수량은 하나 이상이어야 합니다.");
+            throw new BusinessException(ErrorCode.INVALID_QUANTITY, "상품 수량은 하나 이상이어야 합니다.");
         }
         this.quantity--;
         onUpdate();
