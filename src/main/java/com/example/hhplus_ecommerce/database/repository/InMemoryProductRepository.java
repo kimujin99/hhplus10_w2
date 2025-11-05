@@ -5,6 +5,7 @@ import com.example.hhplus_ecommerce.domain.repository.ProductRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,5 +37,13 @@ public class InMemoryProductRepository implements ProductRepository {
     @Override
     public List<Product> findAll() {
         return new ArrayList<>(storage.values());
+    }
+
+    @Override
+    public List<Product> findPopularProduct() {
+        return storage.values().stream()
+                .sorted(Comparator.comparing(Product::getViewCount).reversed())
+                .limit(5)
+                .toList();
     }
 }

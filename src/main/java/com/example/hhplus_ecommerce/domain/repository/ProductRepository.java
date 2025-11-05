@@ -8,4 +8,5 @@ public interface ProductRepository {
     Product findById(Long productId);
     Product save(Product product);
     List<Product> findAll();
+    List<Product> findPopularProduct();
 }
