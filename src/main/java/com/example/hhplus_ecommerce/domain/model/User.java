@@ -15,17 +15,17 @@ public class User extends BaseEntity {
 
     public void usePoint(Long point) {
         if(point <= 0) {
-            throw new BusinessException(ErrorCode.INVALID_POINT_AMOUNT, "사용할 포인트는 0보다 커야합니다.");
+            throw new BusinessException(ErrorCode.INVALID_POINT_AMOUNT);
         }
         if(this.point < point) {
-            throw new BusinessException(ErrorCode.INSUFFICIENT_POINT, "포인트가 부족합니다.");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_POINT);
         }
         this.point -= point;
     }
 
     public void chargePoint(Long point) {
         if(point <= 0) {
-            throw new BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT, "충전할 포인트는 0보다 커야합니다.");
+            throw new BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT);
         }
         if(point % 1000 != 0) {
             throw new BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT, "충전은 1000원 단위로 가능합니다.");

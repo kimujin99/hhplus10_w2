@@ -13,7 +13,7 @@ public class BusinessException extends RuntimeException {
     }
 
     public BusinessException(ErrorCode errorCode) {
-        super(errorCode.name());
+        super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
 }

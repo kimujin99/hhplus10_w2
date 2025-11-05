@@ -32,15 +32,15 @@ public class CouponService {
     public UserCouponResponse issueCoupon(Long userId, IssueCouponRequest request) {
         User user = userRepository.findById(userId);
         if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "존재하지 않는 사용자입니다.");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         Coupon coupon = couponRepository.findById(request.couponId());
         if (coupon == null) {
-            throw new BusinessException(ErrorCode.COUPON_NOT_FOUND, "존재하지 않는 쿠폰입니다.");
+            throw new BusinessException(ErrorCode.COUPON_NOT_FOUND);
         }
         UserCoupon existingUserCoupon = userCouponRepository.findByUserIdAndCouponId(userId, request.couponId());
         if (existingUserCoupon != null) {
-            throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED, "이미 발급받은 쿠폰입니다.");
+            throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
         }
 
         coupon.issue();
@@ -58,7 +58,7 @@ public class CouponService {
     public List<UserCouponResponse> getUserCoupons(Long userId) {
         User user = userRepository.findById(userId);
         if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "존재하지 않는 사용자입니다.");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         List<UserCoupon> userCoupons = userCouponRepository.findByUserId(userId);
@@ -78,10 +78,7 @@ public class CouponService {
                 .map(userCoupon -> {
                     Coupon coupon = couponMap.get(userCoupon.getCouponId());
                     if (coupon == null) {
-                        throw new BusinessException(
-                                ErrorCode.COUPON_NOT_FOUND,
-                                "쿠폰 정보를 찾을 수 없습니다. couponId: " + userCoupon.getCouponId()
-                        );
+                        throw new BusinessException(ErrorCode.COUPON_NOT_FOUND);
                     }
                     return UserCouponResponse.from(userCoupon, coupon);
                 })

@@ -22,7 +22,7 @@ public class UserService {
     public PointResponse getPoint(Long userId) {
         User user = userRepository.findById(userId);
         if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "존재하지 않는 사용자입니다.");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         return PointResponse.from(user);
     }
@@ -30,7 +30,7 @@ public class UserService {
     public List<PointHistoryResponse> getPointHistory(Long userId) {
         User user = userRepository.findById(userId);
         if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "존재하지 않는 사용자입니다.");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         List<PointHistory> pointHistories = pointHistoryRepository.findByUserId(userId);
         return PointHistoryResponse.fromList(pointHistories);
@@ -39,7 +39,7 @@ public class UserService {
     public PointResponse chargePoint(Long userId, ChargePointRequest request) {
         User user = userRepository.findById(userId);
         if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "존재하지 않는 사용자입니다.");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         user.chargePoint(request.amount());

@@ -24,7 +24,7 @@ public class ProductService {
     public ProductResponse getProduct(Long productId) {
         Product product = productRepository.findById(productId);
         if (product == null) {
-            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND, "존재하지 않는 상품입니다.");
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
         product.incrementViewCount();
         return ProductResponse.from(productRepository.save(product));
@@ -33,7 +33,7 @@ public class ProductService {
     public ProductStockResponse getProductStock(Long productId) {
         Product product = productRepository.findById(productId);
         if (product == null) {
-            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND, "존재하지 않는 상품입니다.");
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
         return ProductStockResponse.from(product);
     }

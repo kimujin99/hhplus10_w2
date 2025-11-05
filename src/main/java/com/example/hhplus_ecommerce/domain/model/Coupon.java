@@ -28,7 +28,7 @@ public class Coupon extends BaseEntity {
             throw new BusinessException(ErrorCode.COUPON_EXPIRED, "쿠폰 발급 기간이 종료되었습니다.");
         }
         if(getRemainingQuantity() <= 0) {
-            throw new BusinessException(ErrorCode.COUPON_SOLD_OUT, "쿠폰이 모두 소진되었습니다.");
+            throw new BusinessException(ErrorCode.COUPON_SOLD_OUT);
         }
         this.issuedQuantity++;
     }
@@ -44,7 +44,7 @@ public class Coupon extends BaseEntity {
     public Long applyDiscount(Long originalAmount) {
         LocalDateTime now = LocalDateTime.now();
         if(now.isBefore(this.validFrom) || now.isAfter(this.validUntil)) {
-            throw new BusinessException(ErrorCode.COUPON_EXPIRED, "쿠폰이 만료되었습니다.");
+            throw new BusinessException(ErrorCode.COUPON_EXPIRED);
         }
         return originalAmount - calculateDiscountAmount(originalAmount);
     }

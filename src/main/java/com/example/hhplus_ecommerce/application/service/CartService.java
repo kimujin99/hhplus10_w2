@@ -25,7 +25,7 @@ public class CartService {
     public List<CartItemResponse> getUserCart(Long userId) {
         User user = userRepository.findById(userId);
         if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "존재하지 않는 사용자입니다.");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
@@ -38,11 +38,11 @@ public class CartService {
     public CartItemResponse addCartItem(Long userId, AddCartItemRequest request) {
         User user = userRepository.findById(userId);
         if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "존재하지 않는 사용자입니다.");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         Product product = productRepository.findById(request.productId());
         if (product == null) {
-            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND, "존재하지 않는 상품입니다.");
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
         CartItem existingCartItem = cartItemRepository.findByUserIdAndProductId(userId, request.productId());
@@ -51,7 +51,7 @@ public class CartService {
             // 카트에 상품이 있는 경우
             int newQuantity = existingCartItem.getQuantity() + request.quantity();
             if (product.getStockQuantity() < newQuantity) {
-                throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, "재고가 부족합니다.");
+                throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
             }
 
             existingCartItem.updateQuantity(newQuantity);
@@ -59,7 +59,7 @@ public class CartService {
         } else {
             // 새로운 상품 추가
             if (product.getStockQuantity() < request.quantity()) {
-                throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, "재고가 부족합니다.");
+                throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
             }
             cartItem = CartItem.builder()
                     .userId(userId)
@@ -77,7 +77,7 @@ public class CartService {
     public void deleteCartItem(Long cartItemId) {
         CartItem cartItem = cartItemRepository.findById(cartItemId);
         if (cartItem == null) {
-            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND, "장바구니 항목을 찾을 수 없습니다.");
+            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
         }
 
         cartItemRepository.delete(cartItemId);

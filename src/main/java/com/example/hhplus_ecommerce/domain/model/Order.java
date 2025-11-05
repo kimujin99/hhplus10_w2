@@ -27,14 +27,14 @@ public class Order extends BaseEntity {
 
     public void confirm() {
         if(this.status != OrderStatus.PENDING) {
-            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS, "결제할 수 없는 주문 상태입니다.");
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
         }
         this.status = OrderStatus.CONFIRMED;
     }
 
     public void fail() {
         if(this.status != OrderStatus.PENDING) {
-            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS, "실패 처리할 수 없는 주문 상태입니다.");
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
         }
         this.status = OrderStatus.FAILED;
     }

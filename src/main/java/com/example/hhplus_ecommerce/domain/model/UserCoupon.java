@@ -23,7 +23,7 @@ public class UserCoupon extends BaseEntity {
 
     public void use(Long orderId) {
         if(isUsed()) {
-            throw new BusinessException(ErrorCode.COUPON_ALREADY_USED, "이미 사용된 쿠폰입니다.");
+            throw new BusinessException(ErrorCode.COUPON_ALREADY_USED);
         }
         this.orderId = orderId;
         this.status = UserCouponStatus.USED;
