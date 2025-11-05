@@ -15,8 +15,8 @@ public class InMemoryOrderRepository implements OrderRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public Order findById(Long id) {
-        return storage.get(id);
+    public Order findById(Long orderId) {
+        return storage.get(orderId);
     }
 
     @Override

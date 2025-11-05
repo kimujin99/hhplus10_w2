@@ -15,8 +15,8 @@ public class InMemoryCartItemRepository implements CartItemRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public CartItem findById(Long id) {
-        return storage.get(id);
+    public CartItem findById(Long cartItemId) {
+        return storage.get(cartItemId);
     }
 
     @Override

@@ -5,7 +5,7 @@ import com.example.hhplus_ecommerce.domain.model.CartItem;
 import java.util.List;
 
 public interface CartItemRepository {
-    CartItem findById(Long id);
+    CartItem findById(Long cartItemId);
     CartItem save(CartItem cartItem);
     List<CartItem> findByUserId(Long userId);
 }

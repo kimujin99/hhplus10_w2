@@ -15,8 +15,8 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public UserCoupon findById(Long id) {
-        return storage.get(id);
+    public UserCoupon findById(Long userCouponId) {
+        return storage.get(userCouponId);
     }
 
     @Override

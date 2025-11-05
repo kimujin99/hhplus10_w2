@@ -15,8 +15,8 @@ public class InMemoryPointHistoryRepository implements PointHistoryRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public PointHistory findById(Long id) {
-        return storage.get(id);
+    public PointHistory findById(Long pointHistoryId) {
+        return storage.get(pointHistoryId);
     }
 
     @Override
