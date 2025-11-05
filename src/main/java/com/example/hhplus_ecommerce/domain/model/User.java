@@ -21,7 +21,6 @@ public class User extends BaseEntity {
             throw new BusinessException(ErrorCode.INSUFFICIENT_POINT, "포인트가 부족합니다.");
         }
         this.point -= point;
-        onUpdate();
     }
 
     public void chargePoint(Long point) {
@@ -32,6 +31,5 @@ public class User extends BaseEntity {
             throw new BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT, "충전은 1000원 단위로 가능합니다.");
         }
         this.point += point;
-        onUpdate();
     }
 }

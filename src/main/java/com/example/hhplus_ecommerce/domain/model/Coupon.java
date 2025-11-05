@@ -31,7 +31,6 @@ public class Coupon extends BaseEntity {
             throw new BusinessException(ErrorCode.COUPON_SOLD_OUT, "쿠폰이 모두 소진되었습니다.");
         }
         this.issuedQuantity++;
-        onUpdate();
     }
 
     public Long calculateDiscountAmount(Long originalAmount) {

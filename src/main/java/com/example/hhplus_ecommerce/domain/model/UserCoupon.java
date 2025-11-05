@@ -27,7 +27,6 @@ public class UserCoupon extends BaseEntity {
         }
         this.orderId = orderId;
         this.status = UserCouponStatus.USED;
-        onUpdate();
     }
 
     public boolean isUsed() {

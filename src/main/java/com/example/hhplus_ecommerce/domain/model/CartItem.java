@@ -14,7 +14,6 @@ public class CartItem extends BaseEntity {
 
     public void addQuantity() {
         this.quantity++;
-        onUpdate();
     }
 
     public void subQuantity() {
@@ -22,6 +21,5 @@ public class CartItem extends BaseEntity {
             throw new BusinessException(ErrorCode.INVALID_QUANTITY, "상품 수량은 하나 이상이어야 합니다.");
         }
         this.quantity--;
-        onUpdate();
     }
 }

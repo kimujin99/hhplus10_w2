@@ -30,7 +30,6 @@ public class Order extends BaseEntity {
             throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS, "결제할 수 없는 주문 상태입니다.");
         }
         this.status = OrderStatus.CONFIRMED;
-        onUpdate();
     }
 
     public void fail() {
@@ -38,7 +37,6 @@ public class Order extends BaseEntity {
             throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS, "실패 처리할 수 없는 주문 상태입니다.");
         }
         this.status = OrderStatus.FAILED;
-        onUpdate();
     }
 
     public Long getFinalAmount() {

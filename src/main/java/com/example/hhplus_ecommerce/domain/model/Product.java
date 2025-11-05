@@ -25,7 +25,6 @@ public class Product extends BaseEntity {
 
     public void addStockQuantity(Integer stockQuantity) {
         this.stockQuantity += stockQuantity;
-        onUpdate();
     }
 
     public void subStockQuantity(Integer stockQuantity) {
@@ -33,11 +32,9 @@ public class Product extends BaseEntity {
             throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, "재고가 부족합니다.");
         }
         this.stockQuantity -= stockQuantity;
-        onUpdate();
     }
 
     public void incrementViewCount() {
         this.viewCount++;
-        onUpdate();
     }
 }
