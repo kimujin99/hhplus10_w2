@@ -9,7 +9,7 @@ import java.util.List;
 public class ProductDto {
 
     public record ProductResponse(
-            Long id,
+            Long productId,
             String productName,
             String description,
             Long price,
@@ -35,7 +35,7 @@ public class ProductDto {
     }
 
     public record ProductStockResponse(
-            Long id,
+            Long productId,
             Integer stockQuantity
     ){
         public static ProductStockResponse from(Product product) {
@@ -47,7 +47,7 @@ public class ProductDto {
     }
 
     public record PopularProductResponse(
-            Long id,
+            Long productId,
             String productName,
             Integer viewCount
     ){
