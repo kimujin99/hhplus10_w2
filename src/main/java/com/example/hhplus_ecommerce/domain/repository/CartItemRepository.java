@@ -8,4 +8,6 @@ public interface CartItemRepository {
     CartItem findById(Long cartItemId);
     CartItem save(CartItem cartItem);
     List<CartItem> findByUserId(Long userId);
+    CartItem findByUserIdAndProductId(Long userId, Long productId);
+    void delete(Long cartItemId);
 }

@@ -10,16 +10,14 @@ import lombok.Getter;
 public class CartItem extends BaseEntity {
     private Long userId;
     private Long productId;
+    private String productName;
+    private Long price;
     private Integer quantity;
 
-    public void addQuantity() {
-        this.quantity++;
-    }
-
-    public void subQuantity() {
-        if(this.quantity <= 0) {
+    public void updateQuantity(Integer newQuantity) {
+        if(newQuantity <= 0) {
             throw new BusinessException(ErrorCode.INVALID_QUANTITY, "상품 수량은 하나 이상이어야 합니다.");
         }
-        this.quantity--;
+        this.quantity = newQuantity;
     }
 }

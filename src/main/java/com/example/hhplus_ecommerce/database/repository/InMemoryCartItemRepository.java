@@ -38,4 +38,17 @@ public class InMemoryCartItemRepository implements CartItemRepository {
                 .filter(cartItem -> cartItem.getUserId().equals(userId))
                 .toList();
     }
+
+    @Override
+    public CartItem findByUserIdAndProductId(Long userId, Long productId) {
+        return storage.values().stream()
+                .filter(cartItem -> cartItem.getUserId().equals(userId) && cartItem.getProductId().equals(productId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Override
+    public void delete(Long cartItemId) {
+        storage.remove(cartItemId);
+    }
 }
