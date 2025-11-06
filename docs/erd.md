@@ -42,6 +42,7 @@ erDiagram
         varchar product_name
         text description
         bigint price
+        int original_stock_quantity
         int stock_quantity
         int viewCount
         datetime created_at
@@ -52,6 +53,8 @@ erDiagram
         bigint id PK
         bigint user_id FK
         bigint product_id FK
+        varchar product_name
+        bigint price
         int quantity
         datetime created_at
         datetime updated_at
@@ -72,7 +75,7 @@ erDiagram
         bigint id PK
         bigint user_id FK
         bigint order_id FK
-        varchar transaction_type "CHARGE, USE, REFUND"
+        varchar transaction_type "CHARGE, USE"
         bigint amount
         bigint balance_after
         datetime created_at
