@@ -1,7 +1,6 @@
 package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.Coupon;
-import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.domain.model.UserCoupon;
 import com.example.hhplus_ecommerce.domain.repository.CouponRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserCouponRepository;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,15 +65,12 @@ public class CouponService {
         // TODO: 실제 DB로 전환시 로직 제거. JOIN으로 처리
         Map<Long, Coupon> couponMap = couponIds.stream()
                 .map(couponId -> couponRepository.findById(couponId).orElse(null))
-                .filter(coupon -> coupon != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Coupon::getId, coupon -> coupon));
 
         return userCoupons.stream()
                 .map(userCoupon -> {
                     Coupon coupon = couponMap.get(userCoupon.getCouponId());
-                    if (coupon == null) {
-                        throw new BusinessException(ErrorCode.COUPON_NOT_FOUND);
-                    }
                     return UserCouponResponse.from(userCoupon, coupon);
                 })
                 .toList();

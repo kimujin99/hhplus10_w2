@@ -2,7 +2,6 @@ package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.Order;
 import com.example.hhplus_ecommerce.domain.model.OrderItem;
-import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.domain.repository.OrderItemRepository;
 import com.example.hhplus_ecommerce.domain.repository.OrderRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserRepository;
