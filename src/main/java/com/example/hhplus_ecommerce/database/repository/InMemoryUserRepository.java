@@ -5,6 +5,7 @@ import com.example.hhplus_ecommerce.domain.repository.UserRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -14,8 +15,8 @@ public class InMemoryUserRepository implements UserRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public User findById(Long userId) {
-        return storage.get(userId);
+    public Optional<User> findById(Long userId) {
+        return Optional.ofNullable(storage.get(userId));
     }
 
     @Override

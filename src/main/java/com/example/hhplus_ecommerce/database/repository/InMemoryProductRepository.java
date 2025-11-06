@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -17,8 +18,8 @@ public class InMemoryProductRepository implements ProductRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public Product findById(Long productId) {
-        return storage.get(productId);
+    public Optional<Product> findById(Long productId) {
+        return Optional.ofNullable(storage.get(productId));
     }
 
     @Override

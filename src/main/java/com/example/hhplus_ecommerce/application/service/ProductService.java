@@ -22,19 +22,15 @@ public class ProductService {
     }
 
     public ProductResponse getProduct(Long productId) {
-        Product product = productRepository.findById(productId);
-        if (product == null) {
-            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
-        }
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
         product.incrementViewCount();
         return ProductResponse.from(productRepository.save(product));
     }
 
     public ProductStockResponse getProductStock(Long productId) {
-        Product product = productRepository.findById(productId);
-        if (product == null) {
-            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
-        }
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
         return ProductStockResponse.from(product);
     }
 

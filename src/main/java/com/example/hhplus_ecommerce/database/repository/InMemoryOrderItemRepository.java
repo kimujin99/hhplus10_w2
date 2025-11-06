@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -15,8 +16,8 @@ public class InMemoryOrderItemRepository implements OrderItemRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public OrderItem findById(Long orderItemId) {
-        return storage.get(orderItemId);
+    public Optional<OrderItem> findById(Long orderItemId) {
+        return Optional.ofNullable(storage.get(orderItemId));
     }
 
     @Override

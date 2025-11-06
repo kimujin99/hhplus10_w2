@@ -30,18 +30,14 @@ public class CouponService {
     }
 
     public UserCouponResponse issueCoupon(Long userId, IssueCouponRequest request) {
-        User user = userRepository.findById(userId);
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
-        Coupon coupon = couponRepository.findById(request.couponId());
-        if (coupon == null) {
-            throw new BusinessException(ErrorCode.COUPON_NOT_FOUND);
-        }
-        UserCoupon existingUserCoupon = userCouponRepository.findByUserIdAndCouponId(userId, request.couponId());
-        if (existingUserCoupon != null) {
-            throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        Coupon coupon = couponRepository.findById(request.couponId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+        userCouponRepository.findByUserIdAndCouponId(userId, request.couponId())
+                .ifPresent(uc -> {
+                    throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
+                });
 
         coupon.issue();
         couponRepository.save(coupon);
@@ -56,10 +52,8 @@ public class CouponService {
     }
 
     public List<UserCouponResponse> getUserCoupons(Long userId) {
-        User user = userRepository.findById(userId);
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         List<UserCoupon> userCoupons = userCouponRepository.findByUserId(userId);
 
@@ -70,7 +64,7 @@ public class CouponService {
 
         // TODO: 실제 DB로 전환시 로직 제거. JOIN으로 처리
         Map<Long, Coupon> couponMap = couponIds.stream()
-                .map(couponRepository::findById)
+                .map(couponId -> couponRepository.findById(couponId).orElse(null))
                 .filter(coupon -> coupon != null)
                 .collect(Collectors.toMap(Coupon::getId, coupon -> coupon));
 

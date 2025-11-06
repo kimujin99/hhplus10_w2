@@ -33,6 +33,7 @@ public enum ErrorCode {
     COUPON_SOLD_OUT("쿠폰이 모두 소진되었습니다."),
     COUPON_ALREADY_USED("이미 사용된 쿠폰입니다."),
     COUPON_ALREADY_ISSUED("이미 발급받은 쿠폰입니다."),
+    COUPON_NOT_USED("사용되지 않은 쿠폰입니다."),
 
     INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다.");
 

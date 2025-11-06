@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -15,8 +16,8 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public UserCoupon findById(Long userCouponId) {
-        return storage.get(userCouponId);
+    public Optional<UserCoupon> findById(Long userCouponId) {
+        return Optional.ofNullable(storage.get(userCouponId));
     }
 
     @Override
@@ -40,11 +41,18 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
     }
 
     @Override
-    public UserCoupon findByUserIdAndCouponId(Long userId, Long couponId) {
+    public Optional<UserCoupon> findByUserIdAndCouponId(Long userId, Long couponId) {
         return storage.values().stream()
                 .filter(userCoupon -> userCoupon.getUserId().equals(userId)
                         && userCoupon.getCouponId().equals(couponId))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
+    }
+
+    @Override
+    public Optional<UserCoupon> findByOrderId(Long orderId) {
+        return storage.values().stream()
+                .filter(userCoupon -> userCoupon.getOrderId() != null
+                        && userCoupon.getOrderId().equals(orderId))
+                .findFirst();
     }
 }

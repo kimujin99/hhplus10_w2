@@ -20,27 +20,21 @@ public class UserService {
     private final PointHistoryRepository pointHistoryRepository;
 
     public PointResponse getPoint(Long userId) {
-        User user = userRepository.findById(userId);
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         return PointResponse.from(user);
     }
 
     public List<PointHistoryResponse> getPointHistory(Long userId) {
-        User user = userRepository.findById(userId);
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         List<PointHistory> pointHistories = pointHistoryRepository.findByUserId(userId);
         return PointHistoryResponse.fromList(pointHistories);
     }
 
     public PointResponse chargePoint(Long userId, ChargePointRequest request) {
-        User user = userRepository.findById(userId);
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         user.chargePoint(request.amount());
         User savedUser = userRepository.save(user);

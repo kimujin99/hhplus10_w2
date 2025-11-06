@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -15,8 +16,8 @@ public class InMemoryCartItemRepository implements CartItemRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public CartItem findById(Long cartItemId) {
-        return storage.get(cartItemId);
+    public Optional<CartItem> findById(Long cartItemId) {
+        return Optional.ofNullable(storage.get(cartItemId));
     }
 
     @Override
@@ -40,15 +41,19 @@ public class InMemoryCartItemRepository implements CartItemRepository {
     }
 
     @Override
-    public CartItem findByUserIdAndProductId(Long userId, Long productId) {
+    public Optional<CartItem> findByUserIdAndProductId(Long userId, Long productId) {
         return storage.values().stream()
                 .filter(cartItem -> cartItem.getUserId().equals(userId) && cartItem.getProductId().equals(productId))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     @Override
     public void delete(Long cartItemId) {
         storage.remove(cartItemId);
+    }
+
+    @Override
+    public void deleteByUserId(Long userId) {
+        storage.values().removeIf(cartItem -> cartItem.getUserId().equals(userId));
     }
 }

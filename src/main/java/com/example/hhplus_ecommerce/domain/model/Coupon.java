@@ -41,12 +41,9 @@ public class Coupon extends BaseEntity {
         }
     }
 
-    public Long applyDiscount(Long originalAmount) {
+    public boolean isExpired() {
         LocalDateTime now = LocalDateTime.now();
-        if(now.isBefore(this.validFrom) || now.isAfter(this.validUntil)) {
-            throw new BusinessException(ErrorCode.COUPON_EXPIRED);
-        }
-        return originalAmount - calculateDiscountAmount(originalAmount);
+        return now.isBefore(this.validFrom) || now.isAfter(this.validUntil);
     }
 
     public enum DiscountType {

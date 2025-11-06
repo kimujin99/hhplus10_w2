@@ -21,12 +21,23 @@ public class UserCoupon extends BaseEntity {
         this.status = UserCouponStatus.ISSUED;
     }
 
-    public void use(Long orderId) {
+    public void use() {
         if(isUsed()) {
             throw new BusinessException(ErrorCode.COUPON_ALREADY_USED);
         }
-        this.orderId = orderId;
         this.status = UserCouponStatus.USED;
+    }
+
+    public void assignOrderId(Long orderId) {
+        if(!isUsed()) {
+            throw new BusinessException(ErrorCode.COUPON_NOT_USED);
+        }
+        this.orderId = orderId;
+    }
+
+    public void restore() {
+        this.orderId = null;
+        this.status = UserCouponStatus.ISSUED;
     }
 
     public boolean isUsed() {

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -16,8 +17,8 @@ public class InMemoryCouponRepository implements CouponRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public Coupon findById(Long couponId) {
-        return storage.get(couponId);
+    public Optional<Coupon> findById(Long couponId) {
+        return Optional.ofNullable(storage.get(couponId));
     }
 
     @Override
