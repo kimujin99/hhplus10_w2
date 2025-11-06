@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
@@ -17,6 +18,7 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
 
     @Override
     public Optional<UserCoupon> findById(Long userCouponId) {
+        throttle(300);
         return Optional.ofNullable(storage.get(userCouponId));
     }
 
@@ -27,10 +29,19 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
             userCoupon.onCreate();
             storage.put(userCoupon.getId(), userCoupon);
         } else {
+            throttle(500);
             userCoupon.onUpdate();
             storage.put(userCoupon.getId(), userCoupon);
         }
         return userCoupon;
+    }
+
+    private void throttle(long millis) {
+        try {
+            TimeUnit.MILLISECONDS.sleep((long) (Math.random() * millis));
+        } catch (InterruptedException ignored) {
+
+        }
     }
 
     @Override
@@ -42,6 +53,7 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
 
     @Override
     public Optional<UserCoupon> findByUserIdAndCouponId(Long userId, Long couponId) {
+        throttle(300);
         return storage.values().stream()
                 .filter(userCoupon -> userCoupon.getUserId().equals(userId)
                         && userCoupon.getCouponId().equals(couponId))

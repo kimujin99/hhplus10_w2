@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
@@ -16,6 +17,7 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public Optional<User> findById(Long userId) {
+        throttle(300);
         return Optional.ofNullable(storage.get(userId));
     }
 
@@ -30,5 +32,13 @@ public class InMemoryUserRepository implements UserRepository {
             storage.put(user.getId(), user);
         }
         return user;
+    }
+
+    private void throttle(long millis) {
+        try {
+            TimeUnit.MILLISECONDS.sleep((long) (Math.random() * millis));
+        } catch (InterruptedException ignored) {
+
+        }
     }
 }

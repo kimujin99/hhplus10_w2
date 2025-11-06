@@ -30,25 +30,39 @@ public class CouponService {
     }
 
     public UserCouponResponse issueCoupon(Long userId, IssueCouponRequest request) {
+        // 사용자 존재 확인 (Lock 밖에서)
         userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        Coupon coupon = couponRepository.findById(request.couponId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
-        userCouponRepository.findByUserIdAndCouponId(userId, request.couponId())
-                .ifPresent(uc -> {
-                    throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
-                });
 
-        coupon.issue();
-        couponRepository.save(coupon);
+        // 쿠폰별 Lock 획득
+        couponRepository.lock(request.couponId());
+        try {
+            // Lock 안에서 검증 + 차감
+            Coupon coupon = couponRepository.findById(request.couponId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
 
-        UserCoupon userCoupon = UserCoupon.builder()
-                .userId(userId)
-                .couponId(request.couponId())
-                .build();
-        UserCoupon savedUserCoupon = userCouponRepository.save(userCoupon);
+            // 중복 발급 확인 (Lock 안에서 수행하여 동시성 문제 방지)
+            userCouponRepository.findByUserIdAndCouponId(userId, request.couponId())
+                    .ifPresent(uc -> {
+                        throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
+                    });
 
-        return UserCouponResponse.from(savedUserCoupon, coupon);
+            // 쿠폰 발급 (재고 검증 + 차감)
+            coupon.issue();
+            couponRepository.save(coupon);
+
+            // UserCoupon 저장
+            UserCoupon userCoupon = UserCoupon.builder()
+                    .userId(userId)
+                    .couponId(request.couponId())
+                    .build();
+            UserCoupon savedUserCoupon = userCouponRepository.save(userCoupon);
+
+            return UserCouponResponse.from(savedUserCoupon, coupon);
+        } finally {
+            // Lock 해제
+            couponRepository.unlock(request.couponId());
+        }
     }
 
     public List<UserCouponResponse> getUserCoupons(Long userId) {
