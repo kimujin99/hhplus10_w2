@@ -63,6 +63,48 @@ class ProductTest {
     }
 
     @Test
+    @DisplayName("재고 판매수 조회 검증")
+    void getPurchaseCount() {
+        // given
+        Product product = Product.builder()
+                .productName("테스트 상품")
+                .description("테스트 설명")
+                .price(10000L)
+                .originalStockQuantity(20)
+                .stockQuantity(20)
+                .build();
+
+        // when
+        product.subStockQuantity(15);
+
+        // then
+        assertThat(product.getPurchaseCount()).isEqualTo(15);
+    }
+
+    @Test
+    @DisplayName("재고 인기도 조회 검증")
+    void getPopularityScore() {
+        // given
+        Product product = Product.builder()
+                .productName("테스트 상품")
+                .description("테스트 설명")
+                .price(10000L)
+                .originalStockQuantity(20)
+                .stockQuantity(20)
+                .build();
+
+        // when
+        product.subStockQuantity(15);
+        product.incrementViewCount();
+        product.incrementViewCount();
+        product.incrementViewCount();
+
+        // then
+        double expectedScore = 3 + (15.0 / 20) * 100 * 2;
+        assertThat(product.getPopularityScore()).isEqualTo((int)expectedScore);
+    }
+
+    @Test
     @DisplayName("조회수 증가")
     void incrementViewCount() {
         // given
@@ -70,7 +112,7 @@ class ProductTest {
                 .productName("테스트 상품")
                 .description("테스트 설명")
                 .price(10000L)
-                .stockQuantity(10)
+                .stockQuantity(0)
                 .build();
 
         // when

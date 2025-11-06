@@ -144,6 +144,7 @@ class ProductServiceTest {
                 .productName("인기 상품1")
                 .description("설명1")
                 .price(10000L)
+                .originalStockQuantity(20)
                 .stockQuantity(10)
                 .build();
         product1.incrementViewCount();
@@ -153,17 +154,19 @@ class ProductServiceTest {
                 .productName("인기 상품2")
                 .description("설명2")
                 .price(20000L)
+                .originalStockQuantity(20)
                 .stockQuantity(20)
                 .build();
         product2.incrementViewCount();
 
-        given(productRepository.findPopularProduct()).willReturn(List.of(product1, product2));
+        given(productRepository.findPopularProduct()).willReturn(List.of(product2, product1));
 
         // when
         List<PopularProductResponse> result = productService.getPopularProducts();
 
         // then
         assertThat(result).hasSize(2);
+        assertThat(result.get(0).productId()).isEqualTo(product2.getId());
         verify(productRepository).findPopularProduct();
     }
 }

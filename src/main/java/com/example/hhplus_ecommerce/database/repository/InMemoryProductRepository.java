@@ -40,10 +40,11 @@ public class InMemoryProductRepository implements ProductRepository {
         return new ArrayList<>(storage.values());
     }
 
+    // 인기도 집계: (조회수 × 1) + (판매율 × 100 × 2) 점수로 측정
     @Override
     public List<Product> findPopularProduct() {
         return storage.values().stream()
-                .sorted(Comparator.comparing(Product::getViewCount).reversed())
+                .sorted(Comparator.comparingInt(Product::getPopularityScore).reversed())
                 .limit(5)
                 .toList();
     }
