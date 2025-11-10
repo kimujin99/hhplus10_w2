@@ -10,6 +10,7 @@ import com.example.hhplus_ecommerce.domain.repository.CouponRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserCouponRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@Slf4j
 class CouponConcurrencyTest {
 
     private CouponRepository couponRepository;
@@ -84,13 +86,13 @@ class CouponConcurrencyTest {
         // then
         Coupon result = couponRepository.findById(coupon.getId()).orElseThrow();
 
-        System.out.println("=== 쿠폰 발급 동시성 테스트 결과 ===");
-        System.out.println("총 수량: 50개");
-        System.out.println("발급 시도: " + threadCount + "명");
-        System.out.println("성공 카운트: " + successCount.get());
-        System.out.println("실패 카운트: " + failCount.get());
-        System.out.println("실제 발급 수량: " + result.getIssuedQuantity() + "개");
-        System.out.println("남은 수량: " + result.getRemainingQuantity() + "개");
+        log.info("=== 쿠폰 발급 동시성 테스트 결과 ===");
+        log.info("총 수량: 50개");
+        log.info("발급 시도: {}명", threadCount);
+        log.info("성공 카운트: {}", successCount.get());
+        log.info("실패 카운트: {}", failCount.get());
+        log.info("실제 발급 수량: {}개", result.getIssuedQuantity());
+        log.info("남은 수량: {}개", result.getRemainingQuantity());
 
         // 동시성 제어가 제대로 되었다면:
         // 1. 정확히 50명만 성공
@@ -149,13 +151,13 @@ class CouponConcurrencyTest {
         // then
         Coupon result = couponRepository.findById(coupon.getId()).orElseThrow();
 
-        System.out.println("=== 쿠폰 소진 직전 동시성 테스트 결과 ===");
-        System.out.println("총 수량: 10개");
-        System.out.println("초기 발급: 9개");
-        System.out.println("발급 시도: " + threadCount + "명");
-        System.out.println("성공 카운트: " + successCount.get());
-        System.out.println("실패 카운트: " + failCount.get());
-        System.out.println("최종 발급 수량: " + result.getIssuedQuantity() + "개");
+        log.info("=== 쿠폰 소진 직전 동시성 테스트 결과 ===");
+        log.info("총 수량: 10개");
+        log.info("초기 발급: 9개");
+        log.info("발급 시도: {}명", threadCount);
+        log.info("성공 카운트: {}", successCount.get());
+        log.info("실패 카운트: {}", failCount.get());
+        log.info("최종 발급 수량: {}개", result.getIssuedQuantity());
 
         // 동시성 제어가 제대로 되었다면:
         // 1. 정확히 1명만 성공
@@ -214,12 +216,12 @@ class CouponConcurrencyTest {
         // then
         Coupon result = couponRepository.findById(coupon.getId()).orElseThrow();
 
-        System.out.println("=== 동일 사용자 중복 발급 방지 테스트 결과 ===");
-        System.out.println("총 수량: 100개");
-        System.out.println("발급 시도: " + threadCount + "회 (동일 사용자)");
-        System.out.println("성공 카운트: " + successCount.get());
-        System.out.println("실패 카운트: " + failCount.get());
-        System.out.println("실제 발급 수량: " + result.getIssuedQuantity() + "개");
+        log.info("=== 동일 사용자 중복 발급 방지 테스트 결과 ===");
+        log.info("총 수량: 100개");
+        log.info("발급 시도: {}회 (동일 사용자)", threadCount);
+        log.info("성공 카운트: {}", successCount.get());
+        log.info("실패 카운트: {}", failCount.get());
+        log.info("실제 발급 수량: {}개", result.getIssuedQuantity());
 
         // 동시성 제어가 제대로 되었다면:
         // 1. 정확히 1번만 성공
