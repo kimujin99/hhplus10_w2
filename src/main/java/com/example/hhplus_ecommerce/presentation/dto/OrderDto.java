@@ -4,12 +4,10 @@ import com.example.hhplus_ecommerce.domain.model.Order;
 import com.example.hhplus_ecommerce.domain.model.OrderItem;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
 public class OrderDto {
 
     public record OrderRequest(

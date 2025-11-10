@@ -3,12 +3,10 @@ package com.example.hhplus_ecommerce.presentation.dto;
 import com.example.hhplus_ecommerce.domain.model.Coupon;
 import com.example.hhplus_ecommerce.domain.model.UserCoupon;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
 public class CouponDto {
 
     public record CouponResponse(

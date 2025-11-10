@@ -1,11 +1,9 @@
 package com.example.hhplus_ecommerce.presentation.dto;
 
 import com.example.hhplus_ecommerce.domain.model.Product;
-import lombok.Getter;
 
 import java.util.List;
 
-@Getter
 public class ProductDto {
 
     public record ProductResponse(
