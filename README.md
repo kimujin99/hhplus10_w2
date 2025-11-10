@@ -5,10 +5,10 @@
 ## 목차
 - [요구사항 정의서](#요구사항-정의서)
 - [ERD](#erd-entity-relationship-diagram)
-- [Swagger API 정적 호스팅](#swagger-api)
 - [API 명세서](#api-명세서)
 - [시퀀스 다이어그램](#시퀀스-다이어그램)
 - [플로우차트](#플로우차트)
+- [동시성 제어](#동시성-제어-분석)
 
 ---
 
@@ -97,65 +97,70 @@ erDiagram
 
     USER {
         bigint user_id PK
-        varchar user_name
-        bigint point_balance
+        bigint point
         datetime created_at
         datetime updated_at
     }
 
     ORDER {
-        bigint order_id PK
+        bigint id PK
         bigint user_id FK
         bigint total_amount
         bigint discount_amount
         varchar status "PENDING, CONFIRMED, FAILED, CANCELLED"
         varchar orderer_name
         varchar delivery_address
-        datetime orderd_at
+        datetime created_at
         datetime updated_at
     }
 
     PRODUCT {
-        bigint product_id PK
+        bigint id PK
         varchar product_name
         text description
         bigint price
+        int original_stock_quantity
         int stock_quantity
+        int viewCount
         datetime created_at
         datetime updated_at
     }
 
     CART_ITEM {
-        bigint cart_item_id PK
+        bigint id PK
         bigint user_id FK
         bigint product_id FK
+        varchar product_name
+        bigint price
         int quantity
         datetime created_at
         datetime updated_at
     }
 
     ORDER_ITEM {
-        bigint order_item_id PK
+        bigint id PK
         bigint order_id FK
         bigint product_id FK
         int quantity
         varchar product_name
         bigint price
         datetime created_at
+        datetime updated_at
     }
 
     POINT_HISTORY {
-        bigint point_history_id PK
+        bigint id PK
         bigint user_id FK
         bigint order_id FK
-        varchar transaction_type "CHARGE, USE, REFUND"
+        varchar transaction_type "CHARGE, USE"
         bigint amount
         bigint balance_after
         datetime created_at
+        datetime updated_at
     }
 
     COUPON {
-        bigint coupon_id PK
+        bigint id PK
         varchar name
         varchar discount_type "PERCENTAGE, FIXED"
         bigint discount_value
@@ -164,161 +169,18 @@ erDiagram
         datetime valid_from
         datetime valid_until
         datetime created_at
+        datetime updated_at
     }
 
     USER_COUPON {
-        bigint user_coupon_id PK
+        bigint id PK
         bigint user_id FK
         bigint coupon_id FK
         bigint order_id FK
         varchar status "ISSUED, USED"
-        datetime issued_at
-        datetime used_at
+        datetime created_at
+        datetime updated_at
     }
-```
-
-## 테이블 상세 설명
-
-### 1. USER (사용자)
-- **Primary Key**: user_id
-- **Description**: 사용자 정보를 저장하는 테이블
-- **Fields**:
-  - name: 사용자의 이름
-  - point_balance: 사용자의 현재 포인트 잔액
-
-### 2. ORDER (주문)
-- **Primary Key**: order_id
-- **Foreign Keys**: user_id → USER
-- **Description**: 주문 정보 테이블
-- **Fields**:
-  - total_amount: 총 주문 금액
-  - discount_amount: 쿠폰 할인 금액
-  - status: 주문 상태
-  - orderer_name: 주문자명
-  - delivery_address: 배송지 주소
-- **Status Values**:
-  - PENDING (대기 - 주문 생성됨, 재고/쿠폰 차감됨)
-  - CONFIRMED (완료 - 결제 완료)
-  - FAILED (실패 - 결제 실패, 재고/쿠폰 복원됨)
-  - CANCELLED (취소 - 사용자 취소)
-
-### 3. PRODUCT (상품)
-- **Primary Key**: product_id
-- **Description**: 판매 상품 정보 테이블
-- **Fields**:
-  - product_name: 상품명
-  - description: 상품 설명
-  - price: 상품 가격
-  - stock_quantity: 재고 수량
-- **Note**:
-  - stock_quantity는 재고 관리에 사용되며, 주문 시 차감됨
-  - 카테고리 기능은 요구사항에 따라 생략됨
-
-### 4. CART_ITEM (장바구니 항목)
-- **Primary Key**: cart_item_id
-- **Foreign Keys**:
-  - user_id → USER
-  - product_id → PRODUCT
-- **Description**: 사용자의 장바구니 항목
-- **Fields**:
-  - quantity: 장바구니에 담은 수량
-- **Note**: 같은 사용자-상품 조합은 유니크해야 함 (quantity로 수량 관리)
-
-### 5. ORDER_ITEM (주문 상품)
-- **Primary Key**: order_item_id
-- **Foreign Keys**:
-  - order_id → ORDER
-  - product_id → PRODUCT
-- **Description**: 주문에 포함된 개별 상품 정보
-- **Fields**:
-  - quantity: 주문 수량
-  - product_name: 주문 당시 상품명 (스냅샷)
-  - price: 주문 당시 상품 가격 (스냅샷)
-- **Note**:
-  - name과 price는 주문 당시의 값을 저장 (가격/상품명 변동 이력 보존)
-  - 인기 상품 통계는 ORDER_ITEM의 created_at을 기준으로 집계
-
-### 6. POINT_HISTORY (포인트 거래 이력)
-- **Primary Key**: point_history_id
-- **Foreign Keys**:
-  - user_id → USER
-  - order_id → ORDER (결제 시, nullable)
-- **Description**: 포인트 충전/사용 이력 추적 테이블
-- **Transaction Type Values**:
-  - CHARGE (충전)
-  - USE (사용)
-  - REFUND (환불)
-- **Fields**:
-  - transaction_type: 거래 유형
-  - amount: 거래 금액 (충전/환불은 양수, 사용은 음수)
-  - balance_after: 거래 후 잔액 (포인트 이력 추적 및 검증용)
-- **Note**:
-  - 포인트 사용 내역 조회 가능
-  - 감사(audit) 추적 및 포인트 정합성 검증에 활용
-  - USER.point와 함께 사용하여 이중 검증
-
-### 7. COUPON (쿠폰)
-- **Primary Key**: coupon_id
-- **Description**: 쿠폰 마스터 정보 테이블
-- **Discount Type Values**:
-  - PERCENTAGE (퍼센트 할인)
-  - FIXED (고정 금액 할인)
-- **Fields**:
-  - name: 쿠폰명
-  - discount_type: 할인 유형
-  - discount_value: 할인 값 (퍼센트 또는 고정 금액)
-  - total_quantity: 총 발급 가능 수량
-  - issued_quantity: 현재까지 발급된 수량 (선착순 제어용)
-  - valid_from: 쿠폰 유효 시작일
-  - valid_until: 쿠폰 유효 종료일
-
-### 8. USER_COUPON (사용자 쿠폰)
-- **Primary Key**: user_coupon_id
-- **Foreign Keys**:
-  - user_id → USER
-  - coupon_id → COUPON
-  - order_id → ORDER (사용 시, nullable)
-- **Description**: 사용자별 쿠폰 발급 및 사용 이력
-- **Status Values**:
-  - ISSUED (발급됨)
-  - USED (사용됨)
-- **Fields**:
-  - status: 쿠폰 상태
-  - issued_at: 발급 일시
-  - used_at: 사용 일시
-- **Note**:
-  - 한 사용자는 같은 쿠폰을 한 번만 발급받을 수 있음 (user_id, coupon_id 조합 유니크)
-  - 주문 생성 시 쿠폰을 사용 처리하고, 결제 실패 시 복원
-
-## 인덱스 설계
-
-```sql
--- CART_ITEM
-CREATE INDEX idx_cart_user ON CART_ITEM(user_id);
-CREATE UNIQUE INDEX idx_cart_user_product ON CART_ITEM(user_id, product_id);
-
--- ORDER
-CREATE INDEX idx_order_user ON ORDER(user_id);
-CREATE INDEX idx_order_status ON ORDER(status);
-CREATE INDEX idx_order_date ON ORDER(orderd_at);
-
--- ORDER_ITEM
-CREATE INDEX idx_order_item_order ON ORDER_ITEM(order_id);
-CREATE INDEX idx_order_item_product ON ORDER_ITEM(product_id);
-CREATE INDEX idx_order_item_created ON ORDER_ITEM(created_at); -- 인기 상품 통계용
-
--- POINT_HISTORY
-CREATE INDEX idx_point_history_user ON POINT_HISTORY(user_id);
-CREATE INDEX idx_point_history_user_created ON POINT_HISTORY(user_id, created_at); -- 사용자별 이력 조회 최적화
-
--- COUPON
-CREATE INDEX idx_coupon_valid_period ON COUPON(valid_from, valid_until);
-
--- USER_COUPON
-CREATE INDEX idx_user_coupon_user ON USER_COUPON(user_id);
-CREATE INDEX idx_user_coupon_coupon ON USER_COUPON(coupon_id);
-CREATE INDEX idx_user_coupon_status ON USER_COUPON(status);
-CREATE UNIQUE INDEX idx_user_coupon_unique ON USER_COUPON(user_id, coupon_id); -- 중복 발급 방지
 ```
 
 ## 비즈니스 로직 노트
@@ -398,25 +260,25 @@ https://kimujin99.github.io/hhplus10_w2/
 
 모든 API는 다음 형식의 응답을 반환합니다.
 
+### 성공 응답
 ```json
 {
-  "timestamp": "2025-10-30T17:00:00",
-  "path": "/api/v1/products",
   "success": true,
   "data": {
     "productId": 1,
     "productName": "상품명",
     "description": "상세한 상품 설명...",
     "price": 29900,
-    "stockQuantity": 100
+    "stockQuantity": 100,
+    "viewCount": 45
   },
   "error": null
 }
 ```
+
+### 실패 응답
 ```json
 {
-  "timestamp": "2025-10-30T17:00:00",
-  "path": "/api/v1/products/999",
   "success": false,
   "data": null,
   "error": {
@@ -462,15 +324,20 @@ https://kimujin99.github.io/hhplus10_w2/
 
 **Response** `200 OK`
 ```json
-[
-  {
-    "productId": 1,
-    "productName": "상품명",
-    "description": "상세한 상품 설명...",
-    "price": 29900,
-    "stockQuantity": 100
-  }
-]
+{
+  "success": true,
+  "data": [
+    {
+      "productId": 1,
+      "productName": "상품명",
+      "description": "상세한 상품 설명...",
+      "price": 29900,
+      "stockQuantity": 100,
+      "viewCount": 45
+    }
+  ],
+  "error": null
+}
 ```
 
 ---
@@ -478,7 +345,7 @@ https://kimujin99.github.io/hhplus10_w2/
 ### 1.2 상품 상세 조회
 **GET** `/products/{productId}`
 
-특정 상품의 상세 정보를 조회합니다.
+특정 상품의 상세 정보를 조회합니다. 조회 시 viewCount가 증가합니다.
 
 **Path Parameters**
 - `productId`: 상품 ID
@@ -486,11 +353,16 @@ https://kimujin99.github.io/hhplus10_w2/
 **Response** `200 OK`
 ```json
 {
-  "productId": 1,
-  "productName": "상품명",
-  "description": "상세한 상품 설명...",
-  "price": 29900,
-  "stockQuantity": 100
+  "success": true,
+  "data": {
+    "productId": 1,
+    "productName": "상품명",
+    "description": "상세한 상품 설명...",
+    "price": 29900,
+    "stockQuantity": 100,
+    "viewCount": 45
+  },
+  "error": null
 }
 ```
 
@@ -511,9 +383,12 @@ https://kimujin99.github.io/hhplus10_w2/
 **Response** `200 OK`
 ```json
 {
-  "productId": 1,
-  "productName": "상품명",
-  "stockQuantity": 100
+  "success": true,
+  "data": {
+    "productId": 1,
+    "stockQuantity": 100
+  },
+  "error": null
 }
 ```
 
@@ -523,29 +398,30 @@ https://kimujin99.github.io/hhplus10_w2/
 
 ---
 
-### 1.4 인기 상품 통계 조회
+### 1.4 인기 상품 조회
 **GET** `/products/popular`
 
-최근 3일간의 인기 상품 상위 5개를 조회합니다.
+조회수 및 판매율 기반 상위 5개의 인기 상품을 조회합니다.
+인기도 계산: 조회수 1포인트 + 판매율 2포인트
 
 **Response** `200 OK`
 ```json
-[
-  {
-    "rank": 1,
-    "productId": 1,
-    "productName": "인기 상품 1",
-    "totalOrderQuantity": 150,
-    "orderCount": 45
-  },
-  {
-    "rank": 2,
-    "productId": 5,
-    "productName": "인기 상품 2",
-    "totalOrderQuantity": 120,
-    "orderCount": 38
-  }
-]
+{
+  "success": true,
+  "data": [
+    {
+      "productId": 1,
+      "productName": "인기 상품 1",
+      "viewCount": 150
+    },
+    {
+      "productId": 5,
+      "productName": "인기 상품 2",
+      "viewCount": 120
+    }
+  ],
+  "error": null
+}
 ```
 
 ---
@@ -563,10 +439,12 @@ https://kimujin99.github.io/hhplus10_w2/
 **Response** `200 OK`
 ```json
 {
-  "userId": 1,
-  "userName": "홍길동",
-  "pointBalance": 50000,
-  "updatedAt": "2024-01-20T10:30:00"
+  "success": true,
+  "data": {
+    "userId": 1,
+    "point": 50000
+  },
+  "error": null
 }
 ```
 
@@ -586,31 +464,69 @@ https://kimujin99.github.io/hhplus10_w2/
 
 **Response** `200 OK`
 ```json
-[
-  {
-    "pointHistoryId": 1,
-    "userId": 1,
-    "orderId": 5,
-    "transactionType": "USE",
-    "amount": 29900,
-    "balanceAfter": 120100,
-    "createdAt": "2024-01-20T16:40:00"
-  },
-  {
-    "pointHistoryId": 2,
-    "userId": 1,
-    "orderId": null,
-    "transactionType": "CHARGE",
-    "amount": 100000,
-    "balanceAfter": 150000,
-    "createdAt": "2024-01-20T11:00:00"
-  }
-]
+{
+  "success": true,
+  "data": [
+    {
+      "pointHistoryId": 1,
+      "userId": 1,
+      "orderId": 5,
+      "transactionType": "USE",
+      "amount": 29900,
+      "balanceAfter": 120100,
+      "createdAt": "2024-01-20T16:40:00"
+    },
+    {
+      "pointHistoryId": 2,
+      "userId": 1,
+      "orderId": null,
+      "transactionType": "CHARGE",
+      "amount": 100000,
+      "balanceAfter": 150000,
+      "createdAt": "2024-01-20T11:00:00"
+    }
+  ],
+  "error": null
+}
 ```
 
 **Error Responses**
 
 - `404`, `USER_NOT_FOUND`: 사용자를 찾을 수 없습니다
+
+---
+
+### 2.3 포인트 충전
+**POST** `/users/{userId}/points/charge`
+
+사용자의 포인트를 충전합니다.
+
+**Path Parameters**
+- `userId`: 사용자 ID
+
+**Request Body**
+```json
+{
+  "amount": 100000
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "userId": 1,
+    "point": 150000
+  },
+  "error": null
+}
+```
+
+**Error Responses**
+
+- `404`, `USER_NOT_FOUND`: 사용자를 찾을 수 없습니다
+- `400`, `INVALID_CHARGE_AMOUNT`: 충전 금액이 유효하지 않습니다
 
 ---
 
@@ -626,19 +542,21 @@ https://kimujin99.github.io/hhplus10_w2/
 
 **Response** `200 OK`
 ```json
-[
-  {
-    "cartItemId": 1,
-    "userId": 1,
-    "productId": 1,
-    "productName": "상품명",
-    "price": 29900,
-    "stockQuantity": 100,
-    "quantity": 2,
-    "subtotal": 59800
-  }
-]
-
+{
+  "success": true,
+  "data": [
+    {
+      "cartItemId": 1,
+      "userId": 1,
+      "productId": 1,
+      "productName": "상품명",
+      "price": 29900,
+      "quantity": 2,
+      "subtotal": 59800
+    }
+  ],
+  "error": null
+}
 ```
 
 **Error Responses**
@@ -650,7 +568,7 @@ https://kimujin99.github.io/hhplus10_w2/
 ### 3.2 장바구니에 상품 추가
 **POST** `/users/{userId}/cart`
 
-장바구니에 상품을 추가합니다.
+장바구니에 상품을 추가합니다. 이미 존재하는 상품인 경우 수량이 증가합니다.
 
 **Path Parameters**
 - `userId`: 사용자 ID
@@ -663,17 +581,20 @@ https://kimujin99.github.io/hhplus10_w2/
 }
 ```
 
-**Response** `201 Created`
+**Response** `200 OK`
 ```json
 {
-  "cartItemId": 1,
-  "userId": 1,
-  "productId": 1,
-  "productName": "상품명",
-  "price": 29900,
-  "stockQuantity": 100,
-  "quantity": 2,
-  "subtotal": 59800
+  "success": true,
+  "data": {
+    "cartItemId": 1,
+    "userId": 1,
+    "productId": 1,
+    "productName": "상품명",
+    "price": 29900,
+    "quantity": 2,
+    "subtotal": 59800
+  },
+  "error": null
 }
 ```
 
@@ -685,54 +606,22 @@ https://kimujin99.github.io/hhplus10_w2/
 
 ---
 
-### 3.3 장바구니 상품 수량 변경
-**PATCH** `/users/{userId}/cart/{cartItemId}`
-
-장바구니 상품의 수량을 변경합니다.
-
-**Path Parameters**
-- `userId`: 사용자 ID
-- `cartItemId`: 장바구니 항목 ID
-
-**Request Body**
-```json
-{
-  "quantity": 3
-}
-```
-
-**Response** `200 OK`
-```json
-{
-  "cartItemId": 1,
-  "userId": 1,
-  "productId": 1,
-  "productName": "상품명",
-  "price": 29900,
-  "stockQuantity": 100,
-  "quantity": 2,
-  "subtotal": 59800
-}
-```
-
-**Error Responses**
-
-- `404`, `USER_NOT_FOUND`: 사용자를 찾을 수 없습니다
-- `404`, `CART_ITEM_NOT_FOUND`: 장바구니 항목을 찾을 수 없습니다
-- `400`, `INVALID_QUANTITY`: 수량은 1개 이상이어야 합니다
-
----
-
-### 3.4 장바구니 상품 삭제
-**DELETE** `/users/{userId}/cart/{cartItemId}`
+### 3.3 장바구니 상품 삭제
+**DELETE** `/cart/{cartItemId}`
 
 장바구니에서 상품을 삭제합니다.
 
 **Path Parameters**
-- `userId`: 사용자 ID
 - `cartItemId`: 장바구니 항목 ID
 
-**Response** `204 No Content`
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": null,
+  "error": null
+}
+```
 
 **Error Responses**
 
@@ -749,30 +638,34 @@ https://kimujin99.github.io/hhplus10_w2/
 
 **Response** `200 OK`
 ```json
-[
-  {
-    "couponId": 1,
-    "name": "신규 가입 쿠폰",
-    "discountType": "FIXED",
-    "discountValue": 5000,
-    "totalQuantity": 100,
-    "issuedQuantity": 45,
-    "remainingQuantity": 55,
-    "validFrom": "2024-01-01T00:00:00",
-    "validUntil": "2024-12-31T23:59:59"
-  },
-  {
-    "couponId": 2,
-    "name": "10% 할인 쿠폰",
-    "discountType": "PERCENTAGE",
-    "discountValue": 10,
-    "totalQuantity": 50,
-    "issuedQuantity": 50,
-    "remainingQuantity": 0,
-    "validFrom": "2024-01-15T00:00:00",
-    "validUntil": "2024-01-31T23:59:59"
-  }
-]
+{
+  "success": true,
+  "data": [
+    {
+      "couponId": 1,
+      "name": "신규 가입 쿠폰",
+      "discountType": "FIXED",
+      "discountValue": 5000,
+      "totalQuantity": 100,
+      "issuedQuantity": 45,
+      "remainingQuantity": 55,
+      "validFrom": "2024-01-01T00:00:00",
+      "validUntil": "2024-12-31T23:59:59"
+    },
+    {
+      "couponId": 2,
+      "name": "10% 할인 쿠폰",
+      "discountType": "PERCENTAGE",
+      "discountValue": 10,
+      "totalQuantity": 50,
+      "issuedQuantity": 50,
+      "remainingQuantity": 0,
+      "validFrom": "2024-01-15T00:00:00",
+      "validUntil": "2024-01-31T23:59:59"
+    }
+  ],
+  "error": null
+}
 ```
 
 ---
@@ -792,7 +685,25 @@ https://kimujin99.github.io/hhplus10_w2/
 }
 ```
 
-**Response** `201 Created`
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "userCouponId": 1,
+    "userId": 1,
+    "couponId": 1,
+    "couponName": "신규 가입 쿠폰",
+    "discountType": "FIXED",
+    "discountValue": 5000,
+    "validFrom": "2024-01-01T00:00:00",
+    "validUntil": "2024-12-31T23:59:59",
+    "status": "ISSUED",
+    "issuedAt": "2024-01-20T15:00:00"
+  },
+  "error": null
+}
+```
 
 **Error Responses**
 
@@ -814,34 +725,36 @@ https://kimujin99.github.io/hhplus10_w2/
 
 **Response** `200 OK`
 ```json
-[
+{
+  "success": true,
+  "data": [
     {
       "userCouponId": 1,
       "userId": 1,
       "couponId": 1,
-      "name": "신규 가입 쿠폰",
+      "couponName": "신규 가입 쿠폰",
       "discountType": "FIXED",
       "discountValue": 5000,
       "validFrom": "2024-01-01T00:00:00",
       "validUntil": "2024-12-31T23:59:59",
       "status": "ISSUED",
-      "issuedAt": "2024-01-20T15:00:00",
-      "usedAt": null
+      "issuedAt": "2024-01-20T15:00:00"
     },
     {
       "userCouponId": 2,
       "userId": 1,
       "couponId": 2,
-      "name": "10% 할인 쿠폰",
+      "couponName": "10% 할인 쿠폰",
       "discountType": "PERCENTAGE",
       "discountValue": 10,
       "validFrom": "2024-01-01T00:00:00",
       "validUntil": "2024-12-31T23:59:59",
-      "status": "ISSUED",
-      "issuedAt": "2024-01-20T15:00:00",
-      "usedAt": "2024-05-20T15:00:00"
+      "status": "USED",
+      "issuedAt": "2024-01-20T15:00:00"
     }
-]
+  ],
+  "error": null
+}
 ```
 
 **Error Responses**
@@ -861,38 +774,38 @@ https://kimujin99.github.io/hhplus10_w2/
 ```json
 {
   "userId": 1,
-  "ordererName" : "홍길동",
+  "ordererName": "홍길동",
   "deliveryAddress": "서울시 강남구 테헤란로 123",
   "userCouponId": 1
 }
 ```
 
-**Response** `201 Created`
+**Response** `200 OK`
 ```json
 {
-  "orderId": 1,
-  "userId": 1,
-  "totalAmount": 59800,
-  "discountAmount": 5000,
-  "finalAmount": 54800,
-  "status": "PENDING",
-  "ordererName" : "홍길동",
-  "deliveryAddress": "서울시 강남구 테헤란로 123",
-  "orderedAt": "2024-01-20T16:30:00",
-  "userCouponId": 1,
-  "couponName": "신규 가입 쿠폰",
-  "discountType": "FIXED",
-  "discountValue": 5000,
-  "items": [
-    {
-      "orderItemId": 1,
-      "productId": 1,
-      "productName": "상품명",
-      "price": 29900,
-      "quantity": 2,
-      "subtotal": 59800
-    }
-  ]
+  "success": true,
+  "data": {
+    "orderId": 1,
+    "userId": 1,
+    "totalAmount": 59800,
+    "discountAmount": 5000,
+    "finalAmount": 54800,
+    "status": "PENDING",
+    "ordererName": "홍길동",
+    "deliveryAddress": "서울시 강남구 테헤란로 123",
+    "orderItems": [
+      {
+        "orderItemId": 1,
+        "productId": 1,
+        "productName": "상품명",
+        "price": 29900,
+        "quantity": 2,
+        "subtotal": 59800
+      }
+    ],
+    "createdAt": "2024-01-20T16:30:00"
+  },
+  "error": null
 }
 ```
 
@@ -918,17 +831,20 @@ https://kimujin99.github.io/hhplus10_w2/
 
 **Response** `200 OK`
 ```json
-[
+{
+  "success": true,
+  "data": [
     {
       "orderId": 1,
       "totalAmount": 59800,
       "discountAmount": 5000,
       "finalAmount": 54800,
       "status": "CONFIRMED",
-      "orderedAt": "2024-01-20T16:30:00",
-      "updatedAt": "2024-01-20T16:35:00"
+      "createdAt": "2024-01-20T16:30:00"
     }
-]
+  ],
+  "error": null
+}
 ```
 
 **Error Responses**
@@ -949,30 +865,29 @@ https://kimujin99.github.io/hhplus10_w2/
 **Response** `200 OK`
 ```json
 {
-  "orderId": 1,
-  "userId": 1,
-  "totalAmount": 59800,
-  "discountAmount": 5000,
-  "finalAmount": 54800,
-  "status": "CONFIRMED",
-  "ordererName" : "홍길동",
-  "deliveryAddress": "서울시 강남구 테헤란로 123",
-  "orderedAt": "2024-01-20T16:30:00",
-  "updatedAt": "2024-01-20T16:35:00",
-  "userCouponId": 1,
-  "couponName": "신규 가입 쿠폰",
-  "discountType": "FIXED",
-  "discountValue": 5000,
-  "items": [
-    {
-      "orderItemId": 1,
-      "productId": 1,
-      "productName": "상품명",
-      "price": 29900,
-      "quantity": 2,
-      "subtotal": 59800
-    }
-  ]
+  "success": true,
+  "data": {
+    "orderId": 1,
+    "userId": 1,
+    "totalAmount": 59800,
+    "discountAmount": 5000,
+    "finalAmount": 54800,
+    "status": "CONFIRMED",
+    "ordererName": "홍길동",
+    "deliveryAddress": "서울시 강남구 테헤란로 123",
+    "orderItems": [
+      {
+        "orderItemId": 1,
+        "productId": 1,
+        "productName": "상품명",
+        "price": 29900,
+        "quantity": 2,
+        "subtotal": 59800
+      }
+    ],
+    "createdAt": "2024-01-20T16:30:00"
+  },
+  "error": null
 }
 ```
 
@@ -993,32 +908,17 @@ https://kimujin99.github.io/hhplus10_w2/
 **Path Parameters**
 - `orderId`: 주문 ID
 
-**Response** `201 Created`
+**Response** `200 OK`
 ```json
 {
-  "orderId": 1,
-  "userId": 1,
-  "totalAmount": 59800,
-  "discountAmount": 5000,
-  "finalAmount": 54800,
-  "status": "CONFIRMED",
-  "ordererName" : "홍길동",
-  "deliveryAddress": "서울시 강남구 테헤란로 123",
-  "orderedAt": "2024-01-20T16:30:00",
-  "userCouponId": 1,
-  "couponName": "신규 가입 쿠폰",
-  "discountType": "FIXED",
-  "discountValue": 5000,
-  "items": [
-    {
-      "orderItemId": 1,
-      "productId": 1,
-      "productName": "상품명",
-      "price": 29900,
-      "quantity": 2,
-      "subtotal": 59800
-    }
-  ]
+  "success": true,
+  "data": {
+    "orderId": 1,
+    "paymentAmount": 54800,
+    "status": "CONFIRMED",
+    "paidAt": "2024-01-20T16:35:00"
+  },
+  "error": null
 }
 ```
 
@@ -1046,12 +946,12 @@ https://kimujin99.github.io/hhplus10_w2/
     - 쿠폰 적용 (선택적)
     - 쿠폰 사용 처리 (status: ISSUED → USED)
     - 주문 생성 (status: PENDING)
-    - ORDER_ITEM에 상품 스냅샷 저장
+    - 주문 항목에 상품 스냅샷 저장
 
 2. **결제 생성** (`POST /orders/{orderId}/payments`)
     - 포인트 잔액 검증
     - 포인트 차감
-    - POINT_HISTORY 기록 생성 (transaction_type: USE)
+    - 포인트 거래 내역 생성 (transaction_type: USE)
     - 성공 시: 주문 상태 → CONFIRMED
     - 실패 시: 보상 트랜잭션 (재고 복원, 쿠폰 복원, 주문 상태 → FAILED)
 
@@ -1061,180 +961,24 @@ https://kimujin99.github.io/hhplus10_w2/
     - 쿠폰 유효기간 검증
     - 남은 수량 검증 (issued_quantity < total_quantity)
     - 중복 발급 검증 (user_id + coupon_id 유니크)
+    - 동시성 제어: ReentrantLock을 사용한 쿠폰별 Lock
     - issued_quantity 증가
     - USER_COUPON 생성 (status: ISSUED)
----
 
-# 시퀀스 다이어그램
+### 장바구니 관리
 
-## 장바구니 추가
-```mermaid
-sequenceDiagram
-    participant Client
-    participant CartService
-    participant UserRepository
-    participant ProductRepository
-    participant CartRepository
+1. **장바구니 상품 추가** (`POST /users/{userId}/cart`)
+    - 상품 존재 여부 확인
+    - 이미 장바구니에 있는 상품인 경우 수량 증가
+    - 새로운 상품인 경우 장바구니 항목 생성
 
-    Client->>CartService: 장바구니 추가 요청 (userId, productId, quantity)
+### 인기 상품 집계
 
-    CartService->>UserRepository: 사용자 조회
-    UserRepository-->>CartService: 사용자 정보
-    alt 사용자 없음
-        UserRepository-->>Client: 404 USER_NOT_FOUND
-    end
+1. **인기 상품 조회** (`GET /products/popular`)
+    - 인기도 계산: 조회수 1포인트 + 판매율 2포인트
+    - 판매율 = (판매량 / 초기 재고량) × 100
+    - 상위 5개 상품 조회
 
-    CartService->>ProductRepository: 상품 조회
-    ProductRepository-->>CartService: 상품 정보
-    alt 상품 없음
-        ProductRepository-->>Client: 404 PRODUCT_NOT_FOUND
-    end
-
-    CartService->>CartService: 수량 검증 (1 이상)
-    alt 수량 유효하지 않음
-        CartService-->>Client: 400 INVALID_QUANTITY
-    end
-
-    CartService->>CartRepository: 장바구니 항목 저장
-    CartRepository-->>CartService: 저장 완료
-
-    CartService-->>Client: 201 Created + 장바구니 항목 정보
-```
-
-## 쿠폰 발급
-```mermaid
-sequenceDiagram
-    participant Client
-    participant CouponService
-    participant UserRepository
-    participant CouponRepository
-    participant UserCouponRepository
-
-    Client->>CouponService: 쿠폰 발급 요청 (userId, couponId)
-
-    CouponService->>UserRepository: 사용자 조회
-    UserRepository-->>CouponService: 사용자 정보
-    alt 사용자 없음
-        UserRepository-->>Client: 404 USER_NOT_FOUND
-    end
-
-    CouponService->>CouponRepository: 쿠폰 조회 (Lock)
-    CouponRepository-->>CouponService: 쿠폰 정보
-    alt 쿠폰 없음
-        CouponRepository-->>Client: 404 COUPON_NOT_FOUND
-    end
-
-    CouponService->>CouponService: 유효기간 검증
-    alt 유효기간 아님
-        CouponService-->>Client: 400 COUPON_EXPIRED
-    end
-
-    CouponService->>CouponService: 남은 수량 검증 (issued < total)
-    alt 수량 소진
-        CouponService-->>Client: 400 COUPON_SOLD_OUT
-    end
-
-    CouponService->>UserCouponRepository: 중복 발급 검증 (userId + couponId)
-    UserCouponRepository-->>CouponService: 발급 이력
-    alt 이미 발급됨
-        UserCouponRepository-->>Client: 409 COUPON_ALREADY_ISSUED
-    end
-
-    CouponService->>CouponRepository: issued_quantity 증가
-    CouponService->>UserCouponRepository: USER_COUPON 생성 (status: ISSUED)
-    UserCouponRepository-->>CouponService: 생성 완료
-
-    CouponService-->>Client: 201 Created + 쿠폰 발급 정보
-```
-
-## 주문 생성
-```mermaid
-sequenceDiagram
-    participant Client
-    participant OrderService
-    participant CartService
-    participant ProductService
-    participant CouponService
-    participant OrderRepository
-
-    Client->>OrderService: 주문 생성 요청
-
-    OrderService->>CartService: 장바구니 항목 조회
-    CartService-->>OrderService: 장바구니 목록
-    alt 항목 없음
-        CartService-->>Client: 404 CART_ITEM_NOT_FOUND
-    end
-
-    loop 장바구니 항목별
-        OrderService->>ProductService: 재고 조회 및 차감 요청
-        ProductService->>ProductService: 재고 차감
-        ProductService-->>OrderService: 차감 완료
-        alt 재고 없음
-            ProductService-->>Client: 400 INSUFFICIENT_STOCK
-        end
-    end
-
-    alt 쿠폰 사용 시
-        OrderService->>CouponService: 쿠폰 유효성 검증 및 차감 요청
-        CouponService->>CouponService: 쿠폰 사용 처리 (ISSUED → USED)
-        CouponService-->>OrderService: 처리 완료
-        alt 쿠폰 오류
-            CouponService-->>Client: 400 COUPON_EXPIRED
-        end
-    end
-
-    OrderService->>OrderRepository: 주문 정보 저장 (status: PENDING)
-    OrderRepository->>OrderRepository: ORDER 및 ORDER_ITEM 저장
-    OrderRepository-->>OrderService: 저장 완료
-    OrderService-->>Client: 201 Created + 주문 정보
-```
-
-## 결제
-```mermaid
-sequenceDiagram
-    participant Client
-    participant PaymentService
-    participant OrderRepository
-    participant PointService
-    participant ProductService
-    participant CouponService
-
-    Client->>PaymentService: 결제 요청 (orderId)
-
-    PaymentService->>OrderRepository: 주문 조회
-    OrderRepository-->>PaymentService: 주문 정보
-    alt 주문 없음
-        OrderRepository-->>Client: 404 ORDER_NOT_FOUND
-    end
-
-    PaymentService->>PaymentService: 주문 상태 검증 (PENDING)
-    alt 이미 결제됨
-        PaymentService-->>Client: 400 ORDER_ALREADY_PAID
-    end
-    alt 결제 불가 상태
-        PaymentService-->>Client: 400 INVALID_ORDER_STATUS
-    end
-
-    PaymentService->>PointService: 포인트 잔액 조회
-    PointService-->>PaymentService: 현재 잔액
-
-    PaymentService->>PaymentService: 포인트 잔액 검증
-    alt 잔액 부족
-        PaymentService->>OrderRepository: 주문 상태 → FAILED
-        PaymentService->>ProductService: 재고 복원 (보상 트랜잭션)
-        PaymentService->>CouponService: 쿠폰 복원 (status: ISSUED)
-        PaymentService-->>Client: 400 INSUFFICIENT_POINT
-    end
-
-    PaymentService->>PointService: 포인트 차감
-    PointService->>PointService: POINT_HISTORY 생성 (USE)
-    PointService-->>PaymentService: 차감 완료
-
-    PaymentService->>OrderRepository: 주문 상태 → CONFIRMED
-    OrderRepository-->>PaymentService: 업데이트 완료
-
-    PaymentService-->>Client: 201 Created + 결제 완료 정보
-```
 ---
 
 # 플로우차트
@@ -1373,3 +1117,75 @@ flowchart TD
     V --> W[201 Created 결제 완료 정보 반환]
     W --> E
 ```
+
+---
+
+# 동시성 제어 분석
+
+## 동시성 제어 방식
+
+### 1. Mutex / Lock
+- **원리**: 한 시점에 오직 하나의 스레드만 임계 구역(critical section)에 접근하도록 제한하는 전통적인 방식.  
+  Java에서는 `synchronized`, `ReentrantLock` 등이 대표적이다.
+- **대표 기능 (`ReentrantLock`)**: 재진입(reentrant)이 가능하며, 같은 스레드가 여러 번 락을 획득할 수 있다.
+- **장점**: 구현이 직관적이며, 여러 상태를 원자적으로 묶어야 할 때 유리하다.
+- **단점**: 락을 잘못 해제하거나 경쟁이 과도할 경우 데드락 또는 성능 병목이 발생할 수 있다.
+- **적용**: 복수의 상태(여러 변수를 함께 갱신)에서 원자성이 필요한 경우에 적합하다.
+
+---
+
+### 2. Semaphore
+- **원리**: 동시에 접근할 수 있는 스레드 수(permit)를 지정해, 특정 자원에 대한 접근을 제한한다.
+- **장점**: 리소스 풀(DB 커넥션, 스레드 등)의 동시 접근 제한에 적합하다.
+- **단점**: permit을 반환하지 않는 실수로 교착 상태가 발생할 수 있다.
+- **적용**: 세밀한 상호 배제보다는 자원 수 제어(예: API 요청 제한, 커넥션 풀)에 주로 사용된다.
+
+---
+
+### 3. Atomic Operations
+- **원리**: 하드웨어 수준의 CAS(Compare-And-Swap)를 이용해 락 없이 원자적 연산을 수행한다.  
+  Java의 `AtomicInteger`, `AtomicReference`, `LongAdder` 등이 이에 해당한다.
+- **장점**: 락 오버헤드가 없어 경쟁이 적을 때 빠르다.
+- **단점**: 단일 변수 수준에서만 원자성을 보장하며, 여러 상태를 함께 다루는 경우엔 부적합하다.
+- **적용**: 단일 카운터, ID 생성기, 상태 플래그 등 **단일 변수 갱신**에 매우 적합하다.
+
+---
+
+### 4. Queue 기반
+- **원리**: 요청을 큐에 넣고(생산자), 소비자가 순서대로 처리함으로써 동시성 문제를 단순화한다.  
+  Java의 `BlockingQueue`, `ConcurrentLinkedQueue` 등이 이에 해당한다.
+- **장점**: 요청 순서를 보장하며, 비동기/이벤트 기반 구조에 적합하다.
+- **단점**: 큐에 요청이 쌓이면서 **지연(latency)** 이 발생할 수 있고, 단일 소비자 모델에서는 병목이 생길 수 있다.
+- **적용**: 비동기 작업, 선착순 이벤트, 생산자-소비자 패턴, 처리량 제어 등에 활용된다.
+
+---
+
+## 쿠폰 발급 동시성 제어
+
+### 1. 적용 사례
+- **AtomicInteger**  
+  인메모리 환경에서 쿠폰의 ID 생성에 사용했다.  
+  단일 카운터에는 적합하지만, 여러 데이터에 접근해야 하는 복합 상태의 일관성은 보장하지 못하므로, 핵심 동시성 제어 방식으로는 사용하지 않았다.
+
+- **ReentrantLock**  
+  쿠폰 단위(couponId)로 락을 걸어 한 시점에 한 스레드만 특정 쿠폰을 발급하도록 했다.  
+  사용자 단위의 원자성까지는 보장되지 않지만, “한 유저가 동시에 여러 쿠폰을 발급받으면 안 된다”는 제약이 없기 때문에 쿠폰 재고의 일관성 보장에만 집중했다.  
+  단일 서버 기반의 인메모리 환경에서, 구조를 단순하게 유지하면서도 쿠폰 중복 발급이나 재고 초과 문제를 예방하기 위해 ReentrantLock을 선택했다.
+
+---
+
+### 2. 미적용 사유
+- **Semaphore**  
+  동시에 접근 가능한 스레드 수를 제한하는 방식으로,  
+  여러 스레드가 일정 개수까진 동시에 임계 구역에 진입할 수 있도록 한다.  
+  쿠폰 발급 로직은 “한 시점에 한 스레드만” 특정 쿠폰을 차감해야 하는 완전한 상호 배제(Mutex) 가 필요하므로 사용하지 않았다.  
+  (즉, 세마포어는 사실상 Lock과 동일하지만, 재진입이 불가능하다는 단점이 있다.)
+
+- **Queue 기반 제어**  
+  요청을 큐에 넣고 순차 처리하면 직렬화가 가능하지만,  
+  큐 대기 과정에서 지연(latency) 이 발생하고,  
+  쿠폰별로 큐를 따로 관리해야 하므로 구현과 운영이 복잡해진다.  
+  또한 큐 기반 처리는 비동기 특성상 즉각적인 응답이 어렵기 때문에,  
+  실시간성이 중요한 선착순 쿠폰 발급 시나리오에는 적합하지 않아 사용하지 않았다.
+
+---

@@ -11,25 +11,25 @@
 
 모든 API는 다음 형식의 응답을 반환합니다.
 
+### 성공 응답
 ```json
 {
-  "timestamp": "2025-10-30T17:00:00",
-  "path": "/api/v1/products",
   "success": true,
   "data": {
     "productId": 1,
     "productName": "상품명",
     "description": "상세한 상품 설명...",
     "price": 29900,
-    "stockQuantity": 100
+    "stockQuantity": 100,
+    "viewCount": 45
   },
   "error": null
 }
 ```
+
+### 실패 응답
 ```json
 {
-  "timestamp": "2025-10-30T17:00:00",
-  "path": "/api/v1/products/999",
   "success": false,
   "data": null,
   "error": {
@@ -75,15 +75,20 @@
 
 **Response** `200 OK`
 ```json
-[
+{
+  "success": true,
+  "data": [
     {
       "productId": 1,
       "productName": "상품명",
       "description": "상세한 상품 설명...",
       "price": 29900,
-      "stockQuantity": 100
+      "stockQuantity": 100,
+      "viewCount": 45
     }
-]
+  ],
+  "error": null
+}
 ```
 
 ---
@@ -91,7 +96,7 @@
 ### 1.2 상품 상세 조회
 **GET** `/products/{productId}`
 
-특정 상품의 상세 정보를 조회합니다.
+특정 상품의 상세 정보를 조회합니다. 조회 시 viewCount가 증가합니다.
 
 **Path Parameters**
 - `productId`: 상품 ID
@@ -99,11 +104,16 @@
 **Response** `200 OK`
 ```json
 {
-  "productId": 1,
-  "productName": "상품명",
-  "description": "상세한 상품 설명...",
-  "price": 29900,
-  "stockQuantity": 100
+  "success": true,
+  "data": {
+    "productId": 1,
+    "productName": "상품명",
+    "description": "상세한 상품 설명...",
+    "price": 29900,
+    "stockQuantity": 100,
+    "viewCount": 45
+  },
+  "error": null
 }
 ```
 
@@ -124,9 +134,12 @@
 **Response** `200 OK`
 ```json
 {
-  "productId": 1,
-  "productName": "상품명",
-  "stockQuantity": 100
+  "success": true,
+  "data": {
+    "productId": 1,
+    "stockQuantity": 100
+  },
+  "error": null
 }
 ```
 
@@ -136,29 +149,30 @@
 
 ---
 
-### 1.4 인기 상품 통계 조회
+### 1.4 인기 상품 조회
 **GET** `/products/popular`
 
-최근 3일간의 인기 상품 상위 5개를 조회합니다.
+조회수 및 판매율 기반 상위 5개의 인기 상품을 조회합니다.
+인기도 계산: 조회수 1포인트 + 판매율 2포인트
 
 **Response** `200 OK`
 ```json
-[
+{
+  "success": true,
+  "data": [
     {
-      "rank": 1,
       "productId": 1,
       "productName": "인기 상품 1",
-      "totalOrderQuantity": 150,
-      "orderCount": 45
+      "viewCount": 150
     },
     {
-      "rank": 2,
       "productId": 5,
       "productName": "인기 상품 2",
-      "totalOrderQuantity": 120,
-      "orderCount": 38
+      "viewCount": 120
     }
-]
+  ],
+  "error": null
+}
 ```
 
 ---
@@ -176,10 +190,12 @@
 **Response** `200 OK`
 ```json
 {
-  "userId": 1,
-  "userName": "홍길동",
-  "pointBalance": 50000,
-  "updatedAt": "2024-01-20T10:30:00"
+  "success": true,
+  "data": {
+    "userId": 1,
+    "point": 50000
+  },
+  "error": null
 }
 ```
 
@@ -199,7 +215,9 @@
 
 **Response** `200 OK`
 ```json
-[
+{
+  "success": true,
+  "data": [
     {
       "pointHistoryId": 1,
       "userId": 1,
@@ -218,12 +236,48 @@
       "balanceAfter": 150000,
       "createdAt": "2024-01-20T11:00:00"
     }
-]
+  ],
+  "error": null
+}
 ```
 
 **Error Responses**
 
 - `404`, `USER_NOT_FOUND`: 사용자를 찾을 수 없습니다
+
+---
+
+### 2.3 포인트 충전
+**POST** `/users/{userId}/points/charge`
+
+사용자의 포인트를 충전합니다.
+
+**Path Parameters**
+- `userId`: 사용자 ID
+
+**Request Body**
+```json
+{
+  "amount": 100000
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "userId": 1,
+    "point": 150000
+  },
+  "error": null
+}
+```
+
+**Error Responses**
+
+- `404`, `USER_NOT_FOUND`: 사용자를 찾을 수 없습니다
+- `400`, `INVALID_CHARGE_AMOUNT`: 충전 금액이 유효하지 않습니다
 
 ---
 
@@ -239,19 +293,21 @@
 
 **Response** `200 OK`
 ```json
-[
+{
+  "success": true,
+  "data": [
     {
       "cartItemId": 1,
       "userId": 1,
       "productId": 1,
       "productName": "상품명",
       "price": 29900,
-      "stockQuantity": 100,
       "quantity": 2,
       "subtotal": 59800
     }
-]
-
+  ],
+  "error": null
+}
 ```
 
 **Error Responses**
@@ -263,7 +319,7 @@
 ### 3.2 장바구니에 상품 추가
 **POST** `/users/{userId}/cart`
 
-장바구니에 상품을 추가합니다.
+장바구니에 상품을 추가합니다. 이미 존재하는 상품인 경우 수량이 증가합니다.
 
 **Path Parameters**
 - `userId`: 사용자 ID
@@ -276,17 +332,20 @@
 }
 ```
 
-**Response** `201 Created`
+**Response** `200 OK`
 ```json
 {
-  "cartItemId": 1,
-  "userId": 1,
-  "productId": 1,
-  "productName": "상품명",
-  "price": 29900,
-  "stockQuantity": 100,
-  "quantity": 2,
-  "subtotal": 59800
+  "success": true,
+  "data": {
+    "cartItemId": 1,
+    "userId": 1,
+    "productId": 1,
+    "productName": "상품명",
+    "price": 29900,
+    "quantity": 2,
+    "subtotal": 59800
+  },
+  "error": null
 }
 ```
 
@@ -298,54 +357,22 @@
 
 ---
 
-### 3.3 장바구니 상품 수량 변경
-**PATCH** `/users/{userId}/cart/{cartItemId}`
-
-장바구니 상품의 수량을 변경합니다.
-
-**Path Parameters**
-- `userId`: 사용자 ID
-- `cartItemId`: 장바구니 항목 ID
-
-**Request Body**
-```json
-{
-  "quantity": 3
-}
-```
-
-**Response** `200 OK`
-```json
-{
-  "cartItemId": 1,
-  "userId": 1,
-  "productId": 1,
-  "productName": "상품명",
-  "price": 29900,
-  "stockQuantity": 100,
-  "quantity": 2,
-  "subtotal": 59800
-}
-```
-
-**Error Responses**
-
-- `404`, `USER_NOT_FOUND`: 사용자를 찾을 수 없습니다
-- `404`, `CART_ITEM_NOT_FOUND`: 장바구니 항목을 찾을 수 없습니다
-- `400`, `INVALID_QUANTITY`: 수량은 1개 이상이어야 합니다
-
----
-
-### 3.4 장바구니 상품 삭제
-**DELETE** `/users/{userId}/cart/{cartItemId}`
+### 3.3 장바구니 상품 삭제
+**DELETE** `/cart/{cartItemId}`
 
 장바구니에서 상품을 삭제합니다.
 
 **Path Parameters**
-- `userId`: 사용자 ID
 - `cartItemId`: 장바구니 항목 ID
 
-**Response** `204 No Content`
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": null,
+  "error": null
+}
+```
 
 **Error Responses**
 
@@ -362,7 +389,9 @@
 
 **Response** `200 OK`
 ```json
-[
+{
+  "success": true,
+  "data": [
     {
       "couponId": 1,
       "name": "신규 가입 쿠폰",
@@ -385,7 +414,9 @@
       "validFrom": "2024-01-15T00:00:00",
       "validUntil": "2024-01-31T23:59:59"
     }
-]
+  ],
+  "error": null
+}
 ```
 
 ---
@@ -405,7 +436,25 @@
 }
 ```
 
-**Response** `201 Created`
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "userCouponId": 1,
+    "userId": 1,
+    "couponId": 1,
+    "couponName": "신규 가입 쿠폰",
+    "discountType": "FIXED",
+    "discountValue": 5000,
+    "validFrom": "2024-01-01T00:00:00",
+    "validUntil": "2024-12-31T23:59:59",
+    "status": "ISSUED",
+    "issuedAt": "2024-01-20T15:00:00"
+  },
+  "error": null
+}
+```
 
 **Error Responses**
 
@@ -427,34 +476,36 @@
 
 **Response** `200 OK`
 ```json
-[
+{
+  "success": true,
+  "data": [
     {
       "userCouponId": 1,
       "userId": 1,
       "couponId": 1,
-      "name": "신규 가입 쿠폰",
+      "couponName": "신규 가입 쿠폰",
       "discountType": "FIXED",
       "discountValue": 5000,
       "validFrom": "2024-01-01T00:00:00",
       "validUntil": "2024-12-31T23:59:59",
       "status": "ISSUED",
-      "issuedAt": "2024-01-20T15:00:00",
-      "usedAt": null
+      "issuedAt": "2024-01-20T15:00:00"
     },
     {
       "userCouponId": 2,
       "userId": 1,
       "couponId": 2,
-      "name": "10% 할인 쿠폰",
+      "couponName": "10% 할인 쿠폰",
       "discountType": "PERCENTAGE",
       "discountValue": 10,
       "validFrom": "2024-01-01T00:00:00",
       "validUntil": "2024-12-31T23:59:59",
-      "status": "ISSUED",
-      "issuedAt": "2024-01-20T15:00:00",
-      "usedAt": "2024-05-20T15:00:00"
+      "status": "USED",
+      "issuedAt": "2024-01-20T15:00:00"
     }
-]
+  ],
+  "error": null
+}
 ```
 
 **Error Responses**
@@ -474,38 +525,38 @@
 ```json
 {
   "userId": 1,
-  "ordererName" : "홍길동",
+  "ordererName": "홍길동",
   "deliveryAddress": "서울시 강남구 테헤란로 123",
   "userCouponId": 1
 }
 ```
 
-**Response** `201 Created`
+**Response** `200 OK`
 ```json
 {
-  "orderId": 1,
-  "userId": 1,
-  "totalAmount": 59800,
-  "discountAmount": 5000,
-  "finalAmount": 54800,
-  "status": "PENDING",
-  "ordererName" : "홍길동",
-  "deliveryAddress": "서울시 강남구 테헤란로 123",
-  "orderedAt": "2024-01-20T16:30:00",
-  "userCouponId": 1,
-  "couponName": "신규 가입 쿠폰",
-  "discountType": "FIXED",
-  "discountValue": 5000,
-  "items": [
-    {
-      "orderItemId": 1,
-      "productId": 1,
-      "productName": "상품명",
-      "price": 29900,
-      "quantity": 2,
-      "subtotal": 59800
-    }
-  ]
+  "success": true,
+  "data": {
+    "orderId": 1,
+    "userId": 1,
+    "totalAmount": 59800,
+    "discountAmount": 5000,
+    "finalAmount": 54800,
+    "status": "PENDING",
+    "ordererName": "홍길동",
+    "deliveryAddress": "서울시 강남구 테헤란로 123",
+    "orderItems": [
+      {
+        "orderItemId": 1,
+        "productId": 1,
+        "productName": "상품명",
+        "price": 29900,
+        "quantity": 2,
+        "subtotal": 59800
+      }
+    ],
+    "createdAt": "2024-01-20T16:30:00"
+  },
+  "error": null
 }
 ```
 
@@ -531,17 +582,20 @@
 
 **Response** `200 OK`
 ```json
-[
+{
+  "success": true,
+  "data": [
     {
       "orderId": 1,
       "totalAmount": 59800,
       "discountAmount": 5000,
       "finalAmount": 54800,
       "status": "CONFIRMED",
-      "orderedAt": "2024-01-20T16:30:00",
-      "updatedAt": "2024-01-20T16:35:00"
+      "createdAt": "2024-01-20T16:30:00"
     }
-]
+  ],
+  "error": null
+}
 ```
 
 **Error Responses**
@@ -562,30 +616,29 @@
 **Response** `200 OK`
 ```json
 {
-  "orderId": 1,
-  "userId": 1,
-  "totalAmount": 59800,
-  "discountAmount": 5000,
-  "finalAmount": 54800,
-  "status": "CONFIRMED",
-  "ordererName" : "홍길동",
-  "deliveryAddress": "서울시 강남구 테헤란로 123",
-  "orderedAt": "2024-01-20T16:30:00",
-  "updatedAt": "2024-01-20T16:35:00",
-  "userCouponId": 1,
-  "couponName": "신규 가입 쿠폰",
-  "discountType": "FIXED",
-  "discountValue": 5000,
-  "items": [
-    {
-      "orderItemId": 1,
-      "productId": 1,
-      "productName": "상품명",
-      "price": 29900,
-      "quantity": 2,
-      "subtotal": 59800
-    }
-  ]
+  "success": true,
+  "data": {
+    "orderId": 1,
+    "userId": 1,
+    "totalAmount": 59800,
+    "discountAmount": 5000,
+    "finalAmount": 54800,
+    "status": "CONFIRMED",
+    "ordererName": "홍길동",
+    "deliveryAddress": "서울시 강남구 테헤란로 123",
+    "orderItems": [
+      {
+        "orderItemId": 1,
+        "productId": 1,
+        "productName": "상품명",
+        "price": 29900,
+        "quantity": 2,
+        "subtotal": 59800
+      }
+    ],
+    "createdAt": "2024-01-20T16:30:00"
+  },
+  "error": null
 }
 ```
 
@@ -606,32 +659,17 @@
 **Path Parameters**
 - `orderId`: 주문 ID
 
-**Response** `201 Created`
+**Response** `200 OK`
 ```json
 {
-  "orderId": 1,
-  "userId": 1,
-  "totalAmount": 59800,
-  "discountAmount": 5000,
-  "finalAmount": 54800,
-  "status": "CONFIRMED",
-  "ordererName" : "홍길동",
-  "deliveryAddress": "서울시 강남구 테헤란로 123",
-  "orderedAt": "2024-01-20T16:30:00",
-  "userCouponId": 1,
-  "couponName": "신규 가입 쿠폰",
-  "discountType": "FIXED",
-  "discountValue": 5000,
-  "items": [
-    {
-      "orderItemId": 1,
-      "productId": 1,
-      "productName": "상품명",
-      "price": 29900,
-      "quantity": 2,
-      "subtotal": 59800
-    }
-  ]
+  "success": true,
+  "data": {
+    "orderId": 1,
+    "paymentAmount": 54800,
+    "status": "CONFIRMED",
+    "paidAt": "2024-01-20T16:35:00"
+  },
+  "error": null
 }
 ```
 
@@ -659,12 +697,12 @@
    - 쿠폰 적용 (선택적)
    - 쿠폰 사용 처리 (status: ISSUED → USED)
    - 주문 생성 (status: PENDING)
-   - ORDER_PRODUCT에 상품 스냅샷 저장
+   - 주문 항목에 상품 스냅샷 저장
 
 2. **결제 생성** (`POST /orders/{orderId}/payments`)
    - 포인트 잔액 검증
    - 포인트 차감
-   - POINT_HISTORY 기록 생성 (transaction_type: USE)
+   - 포인트 거래 내역 생성 (transaction_type: USE)
    - 성공 시: 주문 상태 → CONFIRMED
    - 실패 시: 보상 트랜잭션 (재고 복원, 쿠폰 복원, 주문 상태 → FAILED)
 
@@ -674,5 +712,20 @@
    - 쿠폰 유효기간 검증
    - 남은 수량 검증 (issued_quantity < total_quantity)
    - 중복 발급 검증 (user_id + coupon_id 유니크)
+   - 동시성 제어: ReentrantLock을 사용한 쿠폰별 Lock
    - issued_quantity 증가
    - USER_COUPON 생성 (status: ISSUED)
+
+### 장바구니 관리
+
+1. **장바구니 상품 추가** (`POST /users/{userId}/cart`)
+   - 상품 존재 여부 확인
+   - 이미 장바구니에 있는 상품인 경우 수량 증가
+   - 새로운 상품인 경우 장바구니 항목 생성
+
+### 인기 상품 집계
+
+1. **인기 상품 조회** (`GET /products/popular`)
+   - 인기도 계산: 조회수 1포인트 + 판매율 2포인트
+   - 판매율 = (판매량 / 초기 재고량) × 100
+   - 상위 5개 상품 조회
