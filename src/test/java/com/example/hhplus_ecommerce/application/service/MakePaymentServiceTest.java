@@ -2,8 +2,10 @@ package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.*;
 import com.example.hhplus_ecommerce.domain.repository.*;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -75,8 +78,11 @@ class MakePaymentServiceTest {
         PaymentResponse result = makePaymentService.execute(orderId);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(user.getPoint()).isEqualTo(30000L);
+        assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(user.getPoint()).isEqualTo(30000L)
+        );
+
         verify(orderRepository).findById(orderId);
         verify(userRepository).findById(userId);
         verify(orderItemRepository).findByOrderId(orderId);
@@ -93,8 +99,8 @@ class MakePaymentServiceTest {
 
         // when & then
         assertThatThrownBy(() -> makePaymentService.execute(orderId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ORDER_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", OrderErrorCode.ORDER_NOT_FOUND);
         verify(orderRepository).findById(orderId);
         verify(userRepository, never()).findById(any());
     }
@@ -118,8 +124,8 @@ class MakePaymentServiceTest {
 
         // when & then
         assertThatThrownBy(() -> makePaymentService.execute(orderId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
         verify(orderRepository).findById(orderId);
         verify(userRepository).findById(userId);
     }
@@ -154,8 +160,8 @@ class MakePaymentServiceTest {
 
         // when & then
         assertThatThrownBy(() -> makePaymentService.execute(orderId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INSUFFICIENT_POINT);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INSUFFICIENT_POINT);
         verify(orderRepository).findById(orderId);
         verify(userRepository).findById(userId);
         verify(orderItemRepository).findByOrderId(orderId);

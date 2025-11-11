@@ -3,8 +3,12 @@ package com.example.hhplus_ecommerce.presentation.controller;
 import com.example.hhplus_ecommerce.application.service.MakeOrderService;
 import com.example.hhplus_ecommerce.application.service.MakePaymentService;
 import com.example.hhplus_ecommerce.application.service.UserOrderService;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -70,15 +74,14 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.orderId").value(1))
-                .andExpect(jsonPath("$.data.userId").value(1))
-                .andExpect(jsonPath("$.data.totalAmount").value(100000))
-                .andExpect(jsonPath("$.data.discountAmount").value(0))
-                .andExpect(jsonPath("$.data.finalAmount").value(100000))
-                .andExpect(jsonPath("$.data.status").value("PENDING"))
-                .andExpect(jsonPath("$.data.ordererName").value("김우진"))
-                .andExpect(jsonPath("$.data.deliveryAddress").value("서울시 강남구"));
+                .andExpect(jsonPath("$.orderId").value(1))
+                .andExpect(jsonPath("$.userId").value(1))
+                .andExpect(jsonPath("$.totalAmount").value(100000))
+                .andExpect(jsonPath("$.discountAmount").value(0))
+                .andExpect(jsonPath("$.finalAmount").value(100000))
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.ordererName").value("김우진"))
+                .andExpect(jsonPath("$.deliveryAddress").value("서울시 강남구"));
     }
 
     @Test
@@ -108,9 +111,8 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.discountAmount").value(10000))
-                .andExpect(jsonPath("$.data.finalAmount").value(90000));
+                .andExpect(jsonPath("$.discountAmount").value(10000))
+                .andExpect(jsonPath("$.finalAmount").value(90000));
     }
 
     @Test
@@ -119,15 +121,16 @@ class OrderControllerTest {
         // given
         OrderRequest request = new OrderRequest(1L, "김우진", "서울시 강남구", null);
         when(makeOrderService.execute(any(OrderRequest.class)))
-                .thenThrow(new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
+                .thenThrow(new NotFoundException(CartErrorCode.CART_ITEM_NOT_FOUND));
 
         // when & then
         mockMvc.perform(post("/api/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -136,15 +139,16 @@ class OrderControllerTest {
         // given
         OrderRequest request = new OrderRequest(1L, "김우진", "서울시 강남구", null);
         when(makeOrderService.execute(any(OrderRequest.class)))
-                .thenThrow(new BusinessException(ErrorCode.INSUFFICIENT_STOCK));
+                .thenThrow(new ConflictException(ProductErrorCode.INSUFFICIENT_STOCK));
 
         // when & then
         mockMvc.perform(post("/api/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -162,13 +166,12 @@ class OrderControllerTest {
         mockMvc.perform(get("/api/v1/users/{userId}/orders", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].orderId").value(1))
-                .andExpect(jsonPath("$.data[0].status").value("CONFIRMED"))
-                .andExpect(jsonPath("$.data[1].orderId").value(2))
-                .andExpect(jsonPath("$.data[1].status").value("PENDING"));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].orderId").value(1))
+                .andExpect(jsonPath("$[0].status").value("CONFIRMED"))
+                .andExpect(jsonPath("$[1].orderId").value(2))
+                .andExpect(jsonPath("$[1].status").value("PENDING"));
     }
 
     @Test
@@ -197,10 +200,9 @@ class OrderControllerTest {
         mockMvc.perform(get("/api/v1/users/{userId}/orders/{orderId}", userId, orderId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.orderId").value(orderId))
-                .andExpect(jsonPath("$.data.userId").value(userId))
-                .andExpect(jsonPath("$.data.status").value("CONFIRMED"));
+                .andExpect(jsonPath("$.orderId").value(orderId))
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.status").value("CONFIRMED"));
     }
 
     @Test
@@ -210,13 +212,14 @@ class OrderControllerTest {
         Long userId = 1L;
         Long orderId = 999L;
         when(userOrderService.getUserOrder(anyLong(), anyLong()))
-                .thenThrow(new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+                .thenThrow(new NotFoundException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // when & then
         mockMvc.perform(get("/api/v1/users/{userId}/orders/{orderId}", userId, orderId))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -236,10 +239,9 @@ class OrderControllerTest {
         mockMvc.perform(post("/api/v1/orders/{orderId}/payments", orderId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.orderId").value(orderId))
-                .andExpect(jsonPath("$.data.paymentAmount").value(90000))
-                .andExpect(jsonPath("$.data.status").value("CONFIRMED"));
+                .andExpect(jsonPath("$.orderId").value(orderId))
+                .andExpect(jsonPath("$.paymentAmount").value(90000))
+                .andExpect(jsonPath("$.status").value("CONFIRMED"));
     }
 
     @Test
@@ -248,13 +250,14 @@ class OrderControllerTest {
         // given
         Long orderId = 1L;
         when(makePaymentService.execute(anyLong()))
-                .thenThrow(new BusinessException(ErrorCode.INSUFFICIENT_POINT));
+                .thenThrow(new ConflictException(PointErrorCode.INSUFFICIENT_POINT));
 
         // when & then
         mockMvc.perform(post("/api/v1/orders/{orderId}/payments", orderId))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -263,12 +266,13 @@ class OrderControllerTest {
         // given
         Long orderId = 999L;
         when(makePaymentService.execute(anyLong()))
-                .thenThrow(new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+                .thenThrow(new NotFoundException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // when & then
         mockMvc.perform(post("/api/v1/orders/{orderId}/payments", orderId))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 }

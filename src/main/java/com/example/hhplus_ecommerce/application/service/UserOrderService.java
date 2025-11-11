@@ -5,8 +5,9 @@ import com.example.hhplus_ecommerce.domain.model.OrderItem;
 import com.example.hhplus_ecommerce.domain.repository.OrderItemRepository;
 import com.example.hhplus_ecommerce.domain.repository.OrderRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class UserOrderService {
 
     public List<UserOrderResponse> getUserOrders(Long userId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         List<Order> orders = orderRepository.findByUserId(userId);
         return UserOrderResponse.fromList(orders);
@@ -31,11 +32,11 @@ public class UserOrderService {
 
     public OrderResponse getUserOrder(Long userId, Long orderId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(OrderErrorCode.ORDER_NOT_FOUND));
         if (!order.getUserId().equals(userId)) {
-            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+            throw new NotFoundException(OrderErrorCode.ORDER_NOT_FOUND);
         }
 
         List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);

@@ -2,8 +2,8 @@ package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.Product;
 import com.example.hhplus_ecommerce.domain.repository.ProductRepository;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -52,9 +53,12 @@ class ProductServiceTest {
         List<ProductResponse> result = productService.getProducts();
 
         // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).productName()).isEqualTo("상품1");
-        assertThat(result.get(1).productName()).isEqualTo("상품2");
+        assertAll(
+                () -> assertThat(result).hasSize(2),
+                () -> assertThat(result.get(0).productName()).isEqualTo("상품1"),
+                () -> assertThat(result.get(1).productName()).isEqualTo("상품2")
+        );
+
         verify(productRepository).findAll();
     }
 
@@ -77,9 +81,12 @@ class ProductServiceTest {
         ProductResponse result = productService.getProduct(productId);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.productName()).isEqualTo("테스트 상품");
-        assertThat(product.getViewCount()).isEqualTo(1);
+        assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.productName()).isEqualTo("테스트 상품"),
+                () -> assertThat(product.getViewCount()).isEqualTo(1)
+        );
+
         verify(productRepository).findById(productId);
         verify(productRepository).save(product);
     }
@@ -93,8 +100,8 @@ class ProductServiceTest {
 
         // when & then
         assertThatThrownBy(() -> productService.getProduct(productId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRODUCT_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.PRODUCT_NOT_FOUND);
         verify(productRepository).findById(productId);
         verify(productRepository, never()).save(any());
     }
@@ -117,8 +124,11 @@ class ProductServiceTest {
         ProductStockResponse result = productService.getProductStock(productId);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.stockQuantity()).isEqualTo(50);
+        assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.stockQuantity()).isEqualTo(50)
+        );
+
         verify(productRepository).findById(productId);
     }
 
@@ -131,8 +141,8 @@ class ProductServiceTest {
 
         // when & then
         assertThatThrownBy(() -> productService.getProductStock(productId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRODUCT_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.PRODUCT_NOT_FOUND);
         verify(productRepository).findById(productId);
     }
 
@@ -165,8 +175,11 @@ class ProductServiceTest {
         List<PopularProductResponse> result = productService.getPopularProducts();
 
         // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).productId()).isEqualTo(product2.getId());
+        assertAll(
+                () -> assertThat(result).hasSize(2),
+                () -> assertThat(result.get(0).productId()).isEqualTo(product2.getId())
+        );
+
         verify(productRepository).findPopularProduct();
     }
 }

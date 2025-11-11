@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -78,8 +78,8 @@ class OrderTest {
 
         // when & then
         assertThatThrownBy(order::confirm)
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_ORDER_STATUS);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", OrderErrorCode.INVALID_ORDER_STATUS);
     }
 
     @Test
@@ -97,8 +97,8 @@ class OrderTest {
 
         // when & then
         assertThatThrownBy(order::fail)
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_ORDER_STATUS);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", OrderErrorCode.INVALID_ORDER_STATUS);
     }
 
     @Test

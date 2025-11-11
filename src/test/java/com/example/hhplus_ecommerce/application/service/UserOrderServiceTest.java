@@ -6,8 +6,9 @@ import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.domain.repository.OrderItemRepository;
 import com.example.hhplus_ecommerce.domain.repository.OrderRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -80,8 +81,8 @@ class UserOrderServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userOrderService.getUserOrders(userId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
         verify(userRepository).findById(userId);
         verify(orderRepository, never()).findByUserId(any());
     }
@@ -132,8 +133,8 @@ class UserOrderServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userOrderService.getUserOrder(userId, orderId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
         verify(userRepository).findById(userId);
         verify(orderRepository, never()).findById(any());
     }
@@ -151,8 +152,8 @@ class UserOrderServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userOrderService.getUserOrder(userId, orderId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ORDER_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", OrderErrorCode.ORDER_NOT_FOUND);
         verify(userRepository).findById(userId);
         verify(orderRepository).findById(orderId);
     }
@@ -177,8 +178,8 @@ class UserOrderServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userOrderService.getUserOrder(userId, orderId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ORDER_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", OrderErrorCode.ORDER_NOT_FOUND);
         verify(userRepository).findById(userId);
         verify(orderRepository).findById(orderId);
         verify(orderItemRepository, never()).findByOrderId(any());

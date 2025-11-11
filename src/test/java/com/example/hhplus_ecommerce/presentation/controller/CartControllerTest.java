@@ -1,8 +1,10 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.CartService;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.CartDto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -49,14 +51,13 @@ class CartControllerTest {
         mockMvc.perform(get("/api/v1/users/{userId}/cart", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].cartItemId").value(1))
-                .andExpect(jsonPath("$.data[0].userId").value(userId))
-                .andExpect(jsonPath("$.data[0].productName").value("맥북 프로"))
-                .andExpect(jsonPath("$.data[0].quantity").value(1))
-                .andExpect(jsonPath("$.data[0].subtotal").value(2000000));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].cartItemId").value(1))
+                .andExpect(jsonPath("$[0].userId").value(userId))
+                .andExpect(jsonPath("$[0].productName").value("맥북 프로"))
+                .andExpect(jsonPath("$[0].quantity").value(1))
+                .andExpect(jsonPath("$[0].subtotal").value(2000000));
     }
 
     @Test
@@ -70,9 +71,8 @@ class CartControllerTest {
         mockMvc.perform(get("/api/v1/users/{userId}/cart", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(0));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
@@ -92,13 +92,12 @@ class CartControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.cartItemId").value(1))
-                .andExpect(jsonPath("$.data.userId").value(userId))
-                .andExpect(jsonPath("$.data.productId").value(1))
-                .andExpect(jsonPath("$.data.productName").value("맥북 프로"))
-                .andExpect(jsonPath("$.data.quantity").value(2))
-                .andExpect(jsonPath("$.data.subtotal").value(4000000));
+                .andExpect(jsonPath("$.cartItemId").value(1))
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.productId").value(1))
+                .andExpect(jsonPath("$.productName").value("맥북 프로"))
+                .andExpect(jsonPath("$.quantity").value(2))
+                .andExpect(jsonPath("$.subtotal").value(4000000));
     }
 
     @Test
@@ -108,15 +107,16 @@ class CartControllerTest {
         Long userId = 1L;
         AddCartItemRequest request = new AddCartItemRequest(999L, 1);
         when(cartService.addCartItem(anyLong(), any(AddCartItemRequest.class)))
-                .thenThrow(new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+                .thenThrow(new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         // when & then
         mockMvc.perform(post("/api/v1/users/{userId}/cart", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -126,15 +126,16 @@ class CartControllerTest {
         Long userId = 1L;
         AddCartItemRequest request = new AddCartItemRequest(1L, 100);
         when(cartService.addCartItem(anyLong(), any(AddCartItemRequest.class)))
-                .thenThrow(new BusinessException(ErrorCode.INSUFFICIENT_STOCK));
+                .thenThrow(new ConflictException(ProductErrorCode.INSUFFICIENT_STOCK));
 
         // when & then
         mockMvc.perform(post("/api/v1/users/{userId}/cart", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -147,8 +148,7 @@ class CartControllerTest {
         // when & then
         mockMvc.perform(delete("/api/v1/cart/{cartItemId}", cartItemId))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(status().isNoContent());
 
         verify(cartService, times(1)).deleteCartItem(cartItemId);
     }
@@ -158,13 +158,14 @@ class CartControllerTest {
     void deleteCartItem_NotFound() throws Exception {
         // given
         Long cartItemId = 999L;
-        doThrow(new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND))
+        doThrow(new NotFoundException(CartErrorCode.CART_ITEM_NOT_FOUND))
                 .when(cartService).deleteCartItem(anyLong());
 
         // when & then
         mockMvc.perform(delete("/api/v1/cart/{cartItemId}", cartItemId))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 }

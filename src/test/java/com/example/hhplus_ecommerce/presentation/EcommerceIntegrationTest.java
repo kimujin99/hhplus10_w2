@@ -150,9 +150,8 @@ class EcommerceIntegrationTest {
         mockMvc.perform(get("/api/v1/users/{userId}/points", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.userId").value(userId))
-                .andExpect(jsonPath("$.data.point").exists());
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.point").exists());
 
         // 2. 포인트 충전 (맥북 프로 2개 구매 가능한 금액)
         ChargePointRequest chargeRequest = new ChargePointRequest(5000000L);
@@ -161,36 +160,31 @@ class EcommerceIntegrationTest {
                         .content(objectMapper.writeValueAsString(chargeRequest)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.userId").value(userId));
+                .andExpect(jsonPath("$.userId").value(userId));
 
         // 3. 포인트 히스토리 조회
         mockMvc.perform(get("/api/v1/users/{userId}/points/history", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$").isArray());
 
         // 4. 상품 목록 조회
         mockMvc.perform(get("/api/v1/products"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$").isArray());
 
         // 5. 특정 상품 조회
         mockMvc.perform(get("/api/v1/products/{productId}", productId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.productId").value(productId));
+                .andExpect(jsonPath("$.productId").value(productId));
 
         // 6. 상품 재고 조회
         mockMvc.perform(get("/api/v1/products/{productId}/stock", productId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.productId").value(productId));
+                .andExpect(jsonPath("$.productId").value(productId));
 
         // 7. 장바구니에 상품 추가
         AddCartItemRequest addCartRequest = new AddCartItemRequest(productId, 2);
@@ -199,24 +193,21 @@ class EcommerceIntegrationTest {
                         .content(objectMapper.writeValueAsString(addCartRequest)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.productId").value(productId))
-                .andExpect(jsonPath("$.data.quantity").value(2));
+                .andExpect(jsonPath("$.productId").value(productId))
+                .andExpect(jsonPath("$.quantity").value(2));
 
         // 8. 장바구니 조회
         mockMvc.perform(get("/api/v1/users/{userId}/cart", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data[0].productId").value(productId));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].productId").value(productId));
 
         // 9. 쿠폰 목록 조회
         mockMvc.perform(get("/api/v1/coupons"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$").isArray());
 
         // 10. 쿠폰 발급
         IssueCouponRequest issueCouponRequest = new IssueCouponRequest(couponId);
@@ -225,15 +216,13 @@ class EcommerceIntegrationTest {
                         .content(objectMapper.writeValueAsString(issueCouponRequest)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.userId").value(userId))
-                .andExpect(jsonPath("$.data.status").value("ISSUED"))
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.status").value("ISSUED"))
                 .andReturn();
 
         // 발급받은 userCouponId 추출
         String couponResponseJson = couponResult.getResponse().getContentAsString();
         Long userCouponId = objectMapper.readTree(couponResponseJson)
-                .get("data")
                 .get("userCouponId")
                 .asLong();
 
@@ -241,9 +230,8 @@ class EcommerceIntegrationTest {
         mockMvc.perform(get("/api/v1/users/{userId}/coupons", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data[0].status").value("ISSUED"));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].status").value("ISSUED"));
 
         // 12. 주문 생성 (쿠폰 적용)
         OrderRequest orderRequest = new OrderRequest(userId, "김우진", "서울시 강남구", userCouponId);
@@ -252,16 +240,14 @@ class EcommerceIntegrationTest {
                         .content(objectMapper.writeValueAsString(orderRequest)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.userId").value(userId))
-                .andExpect(jsonPath("$.data.status").value("PENDING"))
-                .andExpect(jsonPath("$.data.discountAmount").exists())
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.discountAmount").exists())
                 .andReturn();
 
         // 생성된 orderId 추출
         String orderResponseJson = orderResult.getResponse().getContentAsString();
         Long orderId = objectMapper.readTree(orderResponseJson)
-                .get("data")
                 .get("orderId")
                 .asLong();
 
@@ -269,50 +255,60 @@ class EcommerceIntegrationTest {
         mockMvc.perform(get("/api/v1/users/{userId}/orders", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].orderId").value(orderId))
+                .andExpect(jsonPath("$[0].status").value("PENDING"));
 
         // 14. 특정 주문 조회
         mockMvc.perform(get("/api/v1/users/{userId}/orders/{orderId}", userId, orderId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.orderId").value(orderId))
-                .andExpect(jsonPath("$.data.status").value("PENDING"));
+                .andExpect(jsonPath("$.orderId").value(orderId))
+                .andExpect(jsonPath("$.status").value("PENDING"));
 
         // 15. 결제 처리
         mockMvc.perform(post("/api/v1/orders/{orderId}/payments", orderId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.orderId").value(orderId))
-                .andExpect(jsonPath("$.data.status").value("CONFIRMED"));
+                .andExpect(jsonPath("$.orderId").value(orderId))
+                .andExpect(jsonPath("$.status").value("CONFIRMED"));
 
         // 16. 결제 후 주문 상태 확인
-        mockMvc.perform(get("/api/v1/users/{userId}/orders/{orderId}", userId, orderId))
+        MvcResult confirmedOrderResult = mockMvc.perform(get("/api/v1/users/{userId}/orders/{orderId}", userId, orderId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.status").value("CONFIRMED"));
+                .andExpect(jsonPath("$.status").value("CONFIRMED"))
+                .andReturn();
+
+        // 최종 결제 금액 추출
+        String confirmedOrderJson = confirmedOrderResult.getResponse().getContentAsString();
+        Long finalAmount = objectMapper.readTree(confirmedOrderJson)
+                .get("finalAmount")
+                .asLong();
 
         // 17. 결제 후 포인트 확인 (차감 확인)
+        Long expectedRemainingPoints = 5000000L - finalAmount;
         mockMvc.perform(get("/api/v1/users/{userId}/points", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.point").value(expectedRemainingPoints));
 
         // 18. 장바구니 비워졌는지 확인 (주문 후 자동 삭제)
         mockMvc.perform(get("/api/v1/users/{userId}/cart", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
 
         // 19. 쿠폰 사용 확인
         mockMvc.perform(get("/api/v1/users/{userId}/coupons", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].userCouponId").value(userCouponId))
+                .andExpect(jsonPath("$[0].status").value("USED"));
     }
 
     @Test
@@ -327,8 +323,7 @@ class EcommerceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(chargeRequest)))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(status().isOk());
 
         // 2. 장바구니에 상품 추가
         AddCartItemRequest addCartRequest = new AddCartItemRequest(productId, 1);
@@ -336,8 +331,7 @@ class EcommerceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(addCartRequest)))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(status().isOk());
 
         // 3. 주문 생성 (쿠폰 없음)
         OrderRequest orderRequest = new OrderRequest(userId, "이영희", "서울시 서초구", null);
@@ -346,22 +340,19 @@ class EcommerceIntegrationTest {
                         .content(objectMapper.writeValueAsString(orderRequest)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.discountAmount").value(0))
+                .andExpect(jsonPath("$.discountAmount").value(0))
                 .andReturn();
 
         // 4. 결제 처리
         String orderResponseJson = orderResult.getResponse().getContentAsString();
         Long orderId = objectMapper.readTree(orderResponseJson)
-                .get("data")
                 .get("orderId")
                 .asLong();
 
         mockMvc.perform(post("/api/v1/orders/{orderId}/payments", orderId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.status").value("CONFIRMED"));
+                .andExpect(jsonPath("$.status").value("CONFIRMED"));
     }
 
     @Test
@@ -384,8 +375,9 @@ class EcommerceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(addCartRequest)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -422,14 +414,14 @@ class EcommerceIntegrationTest {
         // 4. 결제 시도 (포인트 부족으로 실패)
         String orderResponseJson = orderResult.getResponse().getContentAsString();
         Long orderId = objectMapper.readTree(orderResponseJson)
-                .get("data")
                 .get("orderId")
                 .asLong();
 
         mockMvc.perform(post("/api/v1/orders/{orderId}/payments", orderId))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -464,8 +456,7 @@ class EcommerceIntegrationTest {
         mockMvc.perform(get("/api/v1/products/popular"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
@@ -486,20 +477,18 @@ class EcommerceIntegrationTest {
         // 2. cartItemId 추출
         String addResponseJson = addResult.getResponse().getContentAsString();
         Long cartItemId = objectMapper.readTree(addResponseJson)
-                .get("data")
                 .get("cartItemId")
                 .asLong();
 
         // 3. 장바구니 상품 삭제
         mockMvc.perform(delete("/api/v1/cart/{cartItemId}", cartItemId))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(status().isNoContent());
 
         // 4. 장바구니 조회로 삭제 확인
         mockMvc.perform(get("/api/v1/users/{userId}/cart", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$").isArray());
     }
 }

@@ -1,11 +1,12 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 class UserCouponTest {
 
@@ -19,8 +20,10 @@ class UserCouponTest {
                 .build();
 
         // then
-        assertThat(userCoupon.getStatus()).isEqualTo(UserCoupon.UserCouponStatus.ISSUED);
-        assertThat(userCoupon.isUsed()).isFalse();
+        assertAll(
+                () -> assertThat(userCoupon.getStatus()).isEqualTo(UserCoupon.UserCouponStatus.ISSUED),
+                () -> assertThat(userCoupon.isUsed()).isFalse()
+        );
     }
 
     @Test
@@ -36,8 +39,10 @@ class UserCouponTest {
         userCoupon.use();
 
         // then
-        assertThat(userCoupon.getStatus()).isEqualTo(UserCoupon.UserCouponStatus.USED);
-        assertThat(userCoupon.isUsed()).isTrue();
+        assertAll(
+                () -> assertThat(userCoupon.getStatus()).isEqualTo(UserCoupon.UserCouponStatus.USED),
+                () -> assertThat(userCoupon.isUsed()).isTrue()
+        );
     }
 
     @Test
@@ -52,8 +57,8 @@ class UserCouponTest {
 
         // when & then
         assertThatThrownBy(userCoupon::use)
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_ALREADY_USED);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_ALREADY_USED);
     }
 
     @Test
@@ -84,8 +89,8 @@ class UserCouponTest {
 
         // when & then
         assertThatThrownBy(() -> userCoupon.assignOrderId(100L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_NOT_USED);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_NOT_USED);
     }
 
     @Test
@@ -103,9 +108,11 @@ class UserCouponTest {
         userCoupon.restore();
 
         // then
-        assertThat(userCoupon.getStatus()).isEqualTo(UserCoupon.UserCouponStatus.ISSUED);
-        assertThat(userCoupon.getOrderId()).isNull();
-        assertThat(userCoupon.isUsed()).isFalse();
+        assertAll(
+                () -> assertThat(userCoupon.getStatus()).isEqualTo(UserCoupon.UserCouponStatus.ISSUED),
+                () -> assertThat(userCoupon.getOrderId()).isNull(),
+                () -> assertThat(userCoupon.isUsed()).isFalse()
+        );
     }
 
     @Test
@@ -130,8 +137,10 @@ class UserCouponTest {
 
         // 쿠폰 복구
         userCoupon.restore();
-        assertThat(userCoupon.isUsed()).isFalse();
-        assertThat(userCoupon.getOrderId()).isNull();
+        assertAll(
+                () -> assertThat(userCoupon.isUsed()).isFalse(),
+                () -> assertThat(userCoupon.getOrderId()).isNull()
+        );
 
         // 다시 사용 가능
         userCoupon.use();

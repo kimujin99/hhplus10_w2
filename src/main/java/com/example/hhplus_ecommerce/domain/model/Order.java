@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,14 +27,14 @@ public class Order extends BaseEntity {
 
     public void confirm() {
         if(this.status != OrderStatus.PENDING) {
-            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
+            throw new ConflictException(OrderErrorCode.INVALID_ORDER_STATUS);
         }
         this.status = OrderStatus.CONFIRMED;
     }
 
     public void fail() {
         if(this.status != OrderStatus.PENDING) {
-            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
+            throw new ConflictException(OrderErrorCode.INVALID_ORDER_STATUS);
         }
         this.status = OrderStatus.FAILED;
     }

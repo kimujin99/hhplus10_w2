@@ -4,8 +4,8 @@ import com.example.hhplus_ecommerce.domain.model.PointHistory;
 import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.domain.repository.PointHistoryRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,20 +21,20 @@ public class UserService {
 
     public PointResponse getPoint(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
         return PointResponse.from(user);
     }
 
     public List<PointHistoryResponse> getPointHistory(Long userId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
         List<PointHistory> pointHistories = pointHistoryRepository.findByUserId(userId);
         return PointHistoryResponse.fromList(pointHistories);
     }
 
     public PointResponse chargePoint(Long userId, ChargePointRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         user.chargePoint(request.amount());
         User savedUser = userRepository.save(user);

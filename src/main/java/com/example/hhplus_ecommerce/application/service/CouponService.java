@@ -5,8 +5,10 @@ import com.example.hhplus_ecommerce.domain.model.UserCoupon;
 import com.example.hhplus_ecommerce.domain.repository.CouponRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserCouponRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,19 +34,19 @@ public class CouponService {
     public UserCouponResponse issueCoupon(Long userId, IssueCouponRequest request) {
         // 사용자 존재 확인 (Lock 밖에서)
         userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // 쿠폰별 Lock 획득
         couponRepository.lock(request.couponId());
         try {
             // Lock 안에서 검증 + 차감
             Coupon coupon = couponRepository.findById(request.couponId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+                    .orElseThrow(() -> new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
 
             // 중복 발급 확인 (Lock 안에서 수행하여 동시성 문제 방지)
             userCouponRepository.findByUserIdAndCouponId(userId, request.couponId())
                     .ifPresent(uc -> {
-                        throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
+                        throw new ConflictException(CouponErrorCode.COUPON_ALREADY_ISSUED);
                     });
 
             // 쿠폰 발급 (재고 검증 + 차감)
@@ -67,7 +69,7 @@ public class CouponService {
 
     public List<UserCouponResponse> getUserCoupons(Long userId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         List<UserCoupon> userCoupons = userCouponRepository.findByUserId(userId);
 

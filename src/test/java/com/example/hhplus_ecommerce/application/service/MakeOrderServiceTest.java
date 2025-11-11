@@ -2,8 +2,8 @@ package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.*;
 import com.example.hhplus_ecommerce.domain.repository.*;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.*;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -184,8 +184,8 @@ class MakeOrderServiceTest {
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
         verify(userRepository).findById(999L);
         verify(cartItemRepository, never()).findByUserId(any());
     }
@@ -203,8 +203,8 @@ class MakeOrderServiceTest {
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.CART_ITEM_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CartErrorCode.CART_ITEM_NOT_FOUND);
         verify(userRepository).findById(userId);
         verify(cartItemRepository).findByUserId(userId);
     }
@@ -236,8 +236,8 @@ class MakeOrderServiceTest {
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INSUFFICIENT_STOCK);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.INSUFFICIENT_STOCK);
         verify(userRepository).findById(userId);
         verify(cartItemRepository).findByUserId(userId);
         verify(productRepository).findById(1L);
@@ -277,8 +277,8 @@ class MakeOrderServiceTest {
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_ALREADY_USED);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_ALREADY_USED);
     }
 
     @Test
@@ -324,7 +324,7 @@ class MakeOrderServiceTest {
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_EXPIRED);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_EXPIRED);
     }
 }

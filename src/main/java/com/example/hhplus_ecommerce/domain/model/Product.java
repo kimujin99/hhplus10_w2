@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -31,7 +31,7 @@ public class Product extends BaseEntity {
 
     public void subStockQuantity(Integer stockQuantity) {
         if(this.stockQuantity < stockQuantity) {
-            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
+            throw new ConflictException(ProductErrorCode.INSUFFICIENT_STOCK);
         }
         this.stockQuantity -= stockQuantity;
     }

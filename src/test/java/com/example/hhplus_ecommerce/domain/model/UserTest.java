@@ -1,11 +1,12 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 class UserTest {
 
@@ -30,13 +31,14 @@ class UserTest {
         User user = new User();
 
         // when & then
-        assertThatThrownBy(() -> user.chargePoint(0L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CHARGE_AMOUNT);
-
-        assertThatThrownBy(() -> user.chargePoint(-1000L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CHARGE_AMOUNT);
+        assertAll(
+                () -> assertThatThrownBy(() -> user.chargePoint(0L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT),
+                () -> assertThatThrownBy(() -> user.chargePoint(-1000L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT)
+        );
     }
 
     @Test
@@ -46,13 +48,14 @@ class UserTest {
         User user = new User();
 
         // when & then
-        assertThatThrownBy(() -> user.chargePoint(500L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CHARGE_AMOUNT);
-
-        assertThatThrownBy(() -> user.chargePoint(1500L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CHARGE_AMOUNT);
+        assertAll(
+                () -> assertThatThrownBy(() -> user.chargePoint(500L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT),
+                () -> assertThatThrownBy(() -> user.chargePoint(1500L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT)
+        );
     }
 
     @Test
@@ -78,8 +81,8 @@ class UserTest {
 
         // when & then
         assertThatThrownBy(() -> user.usePoint(6000L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INSUFFICIENT_POINT);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INSUFFICIENT_POINT);
     }
 
     @Test
@@ -90,13 +93,14 @@ class UserTest {
         user.chargePoint(5000L);
 
         // when & then
-        assertThatThrownBy(() -> user.usePoint(0L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_POINT_AMOUNT);
-
-        assertThatThrownBy(() -> user.usePoint(-1000L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_POINT_AMOUNT);
+        assertAll(
+                () -> assertThatThrownBy(() -> user.usePoint(0L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_POINT_AMOUNT),
+                () -> assertThatThrownBy(() -> user.usePoint(-1000L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_POINT_AMOUNT)
+        );
     }
 
     @Test

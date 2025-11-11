@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -23,14 +23,14 @@ public class UserCoupon extends BaseEntity {
 
     public void use() {
         if(isUsed()) {
-            throw new BusinessException(ErrorCode.COUPON_ALREADY_USED);
+            throw new ConflictException(CouponErrorCode.COUPON_ALREADY_USED);
         }
         this.status = UserCouponStatus.USED;
     }
 
     public void assignOrderId(Long orderId) {
         if(!isUsed()) {
-            throw new BusinessException(ErrorCode.COUPON_NOT_USED);
+            throw new ConflictException(CouponErrorCode.COUPON_NOT_USED);
         }
         this.orderId = orderId;
     }

@@ -2,8 +2,12 @@ package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.*;
 import com.example.hhplus_ecommerce.domain.repository.*;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +32,13 @@ public class MakeOrderService {
     public OrderResponse execute(OrderRequest request) {
         // 사용자 존재 검증
         userRepository.findById(request.userId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // 장바구니 조회 (장바구니를 통해서만 주문 가능)
         // 장바구니 검증 : 존재 검증
         List<CartItem> cartItems = cartItemRepository.findByUserId(request.userId());
         if (cartItems.isEmpty()) {
-            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
+            throw new NotFoundException(CartErrorCode.CART_ITEM_NOT_FOUND);
         }
 
         // 상품 조회
@@ -44,7 +48,7 @@ public class MakeOrderService {
         List<Product> products = new ArrayList<>();
         for (CartItem cartItem : cartItems) {
             Product product = productRepository.findById(cartItem.getProductId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+                    .orElseThrow(() -> new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
             products.add(product);
             totalAmount += cartItem.getPrice() * cartItem.getQuantity();
@@ -57,15 +61,15 @@ public class MakeOrderService {
         Coupon coupon = null;
         if (request.userCouponId() != null) {
             userCoupon = userCouponRepository.findById(request.userCouponId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+                    .orElseThrow(() -> new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
             if (userCoupon.isUsed()) {
-                throw new BusinessException(ErrorCode.COUPON_ALREADY_USED);
+                throw new ConflictException(CouponErrorCode.COUPON_ALREADY_USED);
             }
 
             coupon = couponRepository.findById(userCoupon.getCouponId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+                    .orElseThrow(() -> new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
             if (coupon.isExpired()) {
-                throw new BusinessException(ErrorCode.COUPON_EXPIRED);
+                throw new ConflictException(CouponErrorCode.COUPON_EXPIRED);
             }
 
             discountAmount = coupon.calculateDiscountAmount(totalAmount);

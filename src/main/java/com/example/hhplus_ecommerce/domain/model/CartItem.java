@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CommonErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,7 +16,7 @@ public class CartItem extends BaseEntity {
 
     public void updateQuantity(Integer newQuantity) {
         if(newQuantity <= 0) {
-            throw new BusinessException(ErrorCode.INVALID_QUANTITY);
+            throw new BadRequestException(CommonErrorCode.INVALID_QUANTITY);
         }
         this.quantity = newQuantity;
     }

@@ -6,8 +6,10 @@ import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.domain.repository.CartItemRepository;
 import com.example.hhplus_ecommerce.domain.repository.ProductRepository;
 import com.example.hhplus_ecommerce.domain.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.CartDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -67,9 +70,12 @@ class CartServiceTest {
         List<CartItemResponse> result = cartService.getUserCart(userId);
 
         // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).productName()).isEqualTo("상품1");
-        assertThat(result.get(1).productName()).isEqualTo("상품2");
+        assertAll(
+                () -> assertThat(result).hasSize(2),
+                () -> assertThat(result.get(0).productName()).isEqualTo("상품1"),
+                () -> assertThat(result.get(1).productName()).isEqualTo("상품2")
+        );
+
         verify(userRepository).findById(userId);
         verify(cartItemRepository).findByUserId(userId);
     }
@@ -83,8 +89,8 @@ class CartServiceTest {
 
         // when & then
         assertThatThrownBy(() -> cartService.getUserCart(userId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
         verify(userRepository).findById(userId);
         verify(cartItemRepository, never()).findByUserId(any());
     }
@@ -120,9 +126,12 @@ class CartServiceTest {
         CartItemResponse result = cartService.addCartItem(userId, request);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.productName()).isEqualTo("테스트 상품");
-        assertThat(result.quantity()).isEqualTo(5);
+        assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.productName()).isEqualTo("테스트 상품"),
+                () -> assertThat(result.quantity()).isEqualTo(5)
+        );
+
         verify(userRepository).findById(userId);
         verify(productRepository).findById(productId);
         verify(cartItemRepository).findByUserIdAndProductId(userId, productId);
@@ -160,8 +169,11 @@ class CartServiceTest {
         CartItemResponse result = cartService.addCartItem(userId, request);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.quantity()).isEqualTo(8);
+        assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.quantity()).isEqualTo(8)
+        );
+
         verify(userRepository).findById(userId);
         verify(productRepository).findById(productId);
         verify(cartItemRepository).findByUserIdAndProductId(userId, productId);
@@ -189,8 +201,8 @@ class CartServiceTest {
 
         // when & then
         assertThatThrownBy(() -> cartService.addCartItem(userId, request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INSUFFICIENT_STOCK);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.INSUFFICIENT_STOCK);
         verify(userRepository).findById(userId);
         verify(productRepository).findById(productId);
         verify(cartItemRepository, never()).save(any());
@@ -206,8 +218,8 @@ class CartServiceTest {
 
         // when & then
         assertThatThrownBy(() -> cartService.addCartItem(userId, request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
         verify(userRepository).findById(userId);
         verify(productRepository, never()).findById(any());
         verify(cartItemRepository, never()).save(any());
@@ -227,8 +239,8 @@ class CartServiceTest {
 
         // when & then
         assertThatThrownBy(() -> cartService.addCartItem(userId, request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRODUCT_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.PRODUCT_NOT_FOUND);
         verify(userRepository).findById(userId);
         verify(productRepository).findById(productId);
         verify(cartItemRepository, never()).save(any());
@@ -267,8 +279,8 @@ class CartServiceTest {
 
         // when & then
         assertThatThrownBy(() -> cartService.deleteCartItem(cartItemId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.CART_ITEM_NOT_FOUND);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CartErrorCode.CART_ITEM_NOT_FOUND);
         verify(cartItemRepository).findById(cartItemId);
         verify(cartItemRepository, never()).delete(any());
     }
