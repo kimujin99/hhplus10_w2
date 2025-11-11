@@ -1,4 +1,4 @@
-package com.example.hhplus_ecommerce.presentation.common;
+package com.example.hhplus_ecommerce.presentation.common.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.CouponService;
-import com.example.hhplus_ecommerce.presentation.common.ApiResponse;
+import com.example.hhplus_ecommerce.presentation.common.response.ApiResponse;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

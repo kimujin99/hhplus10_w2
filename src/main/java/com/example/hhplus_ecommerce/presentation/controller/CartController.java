@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.CartService;
-import com.example.hhplus_ecommerce.presentation.common.ApiResponse;
+import com.example.hhplus_ecommerce.presentation.common.response.ApiResponse;
 import com.example.hhplus_ecommerce.presentation.dto.CartDto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

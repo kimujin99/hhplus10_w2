@@ -1,5 +1,6 @@
-package com.example.hhplus_ecommerce.presentation.common;
+package com.example.hhplus_ecommerce.presentation.common.exception;
 
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
 import lombok.Getter;
 
 @Getter

@@ -1,5 +1,6 @@
-package com.example.hhplus_ecommerce.presentation.common;
+package com.example.hhplus_ecommerce.presentation.common.response;
 
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -1,9 +1,9 @@
 package com.example.hhplus_ecommerce.presentation;
 
-import com.example.hhplus_ecommerce.presentation.common.ApiResponse;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.ErrorResponse;
+import com.example.hhplus_ecommerce.presentation.common.response.ApiResponse;
+import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.response.ErrorResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

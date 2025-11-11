@@ -1,4 +1,4 @@
-package com.example.hhplus_ecommerce.presentation.common;
+package com.example.hhplus_ecommerce.presentation.common.errorCode;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

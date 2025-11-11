@@ -1,8 +1,8 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.CouponService;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;

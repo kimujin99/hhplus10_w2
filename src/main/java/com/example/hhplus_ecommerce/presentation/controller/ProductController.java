@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.ProductService;
-import com.example.hhplus_ecommerce.presentation.common.ApiResponse;
+import com.example.hhplus_ecommerce.presentation.common.response.ApiResponse;
 import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

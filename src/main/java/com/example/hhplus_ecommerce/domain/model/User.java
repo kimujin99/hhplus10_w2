@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BusinessException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ErrorCode;
 import lombok.Getter;
 
 @Getter
