@@ -5,19 +5,19 @@ import com.example.hhplus_ecommerce.domain.model.Product;
 import com.example.hhplus_ecommerce.infrastructure.repository.CartItemRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
-import com.example.hhplus_ecommerce.presentation.dto.CartDto.*;
+import com.example.hhplus_ecommerce.presentation.dto.CartDto.AddCartItemRequest;
+import com.example.hhplus_ecommerce.presentation.dto.CartDto.CartItemResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CartService {
 
     private final CartItemRepository cartItemRepository;
@@ -25,19 +25,16 @@ public class CartService {
     private final UserRepository userRepository;
 
     public List<CartItemResponse> getUserCart(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
-
+        userRepository.findByIdOrThrow(userId);
         List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
 
         return  CartItemResponse.fromList(cartItems);
     }
 
+    @Transactional
     public CartItemResponse addCartItem(Long userId, AddCartItemRequest request) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
-        Product product = productRepository.findById(request.productId())
-                .orElseThrow(() -> new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        userRepository.findByIdOrThrow(userId);
+        Product product = productRepository.findByIdOrThrow(request.productId());
 
         CartItem cartItem = cartItemRepository.findByUserIdAndProductId(userId, request.productId())
                 .map(existingCartItem -> {
@@ -67,10 +64,9 @@ public class CartService {
         return CartItemResponse.from(cartItem);
     }
 
+    @Transactional
     public void deleteCartItem(Long cartItemId) {
-        cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new NotFoundException(CartErrorCode.CART_ITEM_NOT_FOUND));
-
+        cartItemRepository.findByIdOrThrow(cartItemId);
         cartItemRepository.deleteById(cartItemId);
     }
 }

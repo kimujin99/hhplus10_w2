@@ -5,21 +5,19 @@ import com.example.hhplus_ecommerce.domain.model.UserCoupon;
 import com.example.hhplus_ecommerce.infrastructure.repository.CouponRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.UserCouponRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CouponService {
 
     private final CouponRepository couponRepository;
@@ -32,22 +30,19 @@ public class CouponService {
     }
 
     public CouponResponse getCoupon(Long couponId) {
-        Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
+        Coupon coupon = couponRepository.findByIdOrThrow(couponId);
         return CouponResponse.from(coupon);
     }
 
+    @Transactional
     public UserCouponResponse issueCoupon(Long userId, IssueCouponRequest request) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
-
-        Coupon coupon = couponRepository.findById(request.couponId())
-                .orElseThrow(() -> new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
+        userRepository.findByIdOrThrow(userId);
+        Coupon coupon = couponRepository.findByIdOrThrow(request.couponId());
 
         userCouponRepository.findByUserIdAndCouponId(userId, request.couponId())
-                .ifPresent(uc -> {
-                    throw new ConflictException(CouponErrorCode.COUPON_ALREADY_ISSUED);
-                });
+            .ifPresent(uc -> {
+                throw new ConflictException(CouponErrorCode.COUPON_ALREADY_ISSUED);
+            });
 
         // 쿠폰 발급 (재고 검증 + 차감)
         coupon.issue();
@@ -64,9 +59,7 @@ public class CouponService {
     }
 
     public List<UserCouponResponse> getUserCoupons(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
-
+        userRepository.findByIdOrThrow(userId);
         List<UserCoupon> userCoupons = userCouponRepository.findByUserId(userId);
 
         List<Long> couponIds = userCoupons.stream()

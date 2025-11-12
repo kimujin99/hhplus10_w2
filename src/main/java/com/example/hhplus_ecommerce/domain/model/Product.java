@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import jakarta.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -35,14 +35,6 @@ public class Product extends BaseEntity {
 
     public Integer getPurchaseCount() {
         return this.originalStockQuantity - this.stockQuantity;
-    }
-    public Integer getPopularityScore() {
-        double salesRatio = 0.0;
-        int total = this.originalStockQuantity;
-        if (total > 0) {
-            salesRatio = (double) getPurchaseCount() / total;
-        }
-        return (int) (viewCount + salesRatio * 100 * 2);
     }
 
     public void incrementViewCount() {

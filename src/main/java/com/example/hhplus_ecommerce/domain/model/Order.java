@@ -12,10 +12,12 @@ import org.hibernate.annotations.ColumnDefault;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "ORDER_TABLE")
+@Table(name = "order_table")
 public class Order extends BaseEntity {
     @Column(nullable = false)
     private Long userId;
+    @Column(nullable = true)
+    private Long userCouponId;
     private Long totalAmount;
     private Long discountAmount;
     @Enumerated(EnumType.STRING)
