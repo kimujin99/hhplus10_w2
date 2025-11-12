@@ -20,6 +20,10 @@ public class UserCoupon extends BaseEntity {
     @ColumnDefault("ISSUED") @Builder.Default
     private UserCouponStatus status = UserCouponStatus.ISSUED;
 
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false)
+    private Coupon coupon;
+
     public void use() {
         if(isUsed()) {
             throw new ConflictException(CouponErrorCode.COUPON_ALREADY_USED);

@@ -57,7 +57,7 @@ public class CouponDto {
             return new UserCouponResponse(
                     userCoupon.getId(),
                     userCoupon.getUserId(),
-                    userCoupon.getCouponId(),
+                    userCoupon.getCoupon().getId(),
                     coupon.getName(),
                     coupon.getDiscountType().name(),
                     coupon.getDiscountValue(),

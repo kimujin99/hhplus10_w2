@@ -4,7 +4,9 @@ import com.example.hhplus_ecommerce.domain.model.Product;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,4 +29,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         LIMIT 5
     """, nativeQuery = true)
     List<Product> findPopularProduct();
+
+    @Modifying
+    @Query(value = "UPDATE product SET view_count = view_count + 1 WHERE id = :id", nativeQuery = true)
+    void incrementViewCount(@Param("id") Long id);
 }

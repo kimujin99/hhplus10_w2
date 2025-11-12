@@ -7,7 +7,6 @@ import com.example.hhplus_ecommerce.infrastructure.repository.UserCouponReposito
 import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -51,7 +50,7 @@ public class CouponService {
         // UserCoupon 저장
         UserCoupon userCoupon = UserCoupon.builder()
                 .userId(userId)
-                .couponId(request.couponId())
+                .coupon(coupon)
                 .build();
         UserCoupon savedUserCoupon = userCouponRepository.save(userCoupon);
 
@@ -62,21 +61,9 @@ public class CouponService {
         userRepository.findByIdOrThrow(userId);
         List<UserCoupon> userCoupons = userCouponRepository.findByUserId(userId);
 
-        List<Long> couponIds = userCoupons.stream()
-                .map(UserCoupon::getCouponId)
-                .distinct()
-                .toList();
-
-        // TODO: 실제 DB로 전환시 로직 제거. JOIN으로 처리
-        Map<Long, Coupon> couponMap = couponIds.stream()
-                .map(couponId -> couponRepository.findById(couponId).orElse(null))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Coupon::getId, coupon -> coupon));
-
         return userCoupons.stream()
                 .map(userCoupon -> {
-                    Coupon coupon = couponMap.get(userCoupon.getCouponId());
-                    return UserCouponResponse.from(userCoupon, coupon);
+                    return UserCouponResponse.from(userCoupon, userCoupon.getCoupon());
                 })
                 .toList();
     }
