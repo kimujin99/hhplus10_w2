@@ -8,6 +8,7 @@ import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,28 @@ public class CouponService {
     public CouponResponse getCoupon(Long couponId) {
         Coupon coupon = couponRepository.findByIdOrThrow(couponId);
         return CouponResponse.from(coupon);
+    }
+
+    private static final int MAX_RETRY_COUNT = 3;
+
+    public UserCouponResponse issueCouponWithRetry(Long userId, IssueCouponRequest request) {
+        int retryCount = 0;
+
+        while (true) {
+            try {
+                // 실제 트랜잭션 메서드 호출
+                return issueCoupon(userId, request);
+            } catch (OptimisticLockException e) {
+                if (++retryCount >= MAX_RETRY_COUNT) {
+                    throw new ConflictException(CouponErrorCode.COUPON_ISSUE_CONFLICT);
+                }
+
+                // 짧은 대기 (optional, DB 부하 완화)
+                try {
+                    Thread.sleep(100L);
+                } catch (InterruptedException ignored) {}
+            }
+        }
     }
 
     @Transactional
