@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.Product;
-import com.example.hhplus_ecommerce.domain.repository.ProductRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;

@@ -1,20 +1,21 @@
 package com.example.hhplus_ecommerce.presentation;
 
 import com.example.hhplus_ecommerce.application.service.CouponService;
-import com.example.hhplus_ecommerce.database.repository.InMemoryCouponRepository;
-import com.example.hhplus_ecommerce.database.repository.InMemoryUserCouponRepository;
-import com.example.hhplus_ecommerce.database.repository.InMemoryUserRepository;
 import com.example.hhplus_ecommerce.domain.model.Coupon;
 import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.domain.repository.CouponRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserCouponRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.CouponRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
@@ -26,20 +27,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Slf4j
+@Testcontainers
 class CouponConcurrencyTest {
 
-    private CouponRepository couponRepository;
-    private UserCouponRepository userCouponRepository;
-    private UserRepository userRepository;
-    private CouponService couponService;
+    @Container
+    static MySQLContainer<?> container = new MySQLContainer<>("mysql:latest")
+            .withDatabaseName("test")
+            .withUsername("test")
+            .withPassword("test");
 
-    @BeforeEach
-    void setUp() {
-        couponRepository = new InMemoryCouponRepository();
-        userCouponRepository = new InMemoryUserCouponRepository();
-        userRepository = new InMemoryUserRepository();
-        couponService = new CouponService(couponRepository, userCouponRepository, userRepository);
+    @DynamicPropertySource
+    static void setDatasourceProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", container::getJdbcUrl);
+        registry.add("spring.datasource.username", container::getUsername);
+        registry.add("spring.datasource.password", container::getPassword);
     }
+
+    @Autowired
+    private CouponRepository couponRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private CouponService couponService;
 
     @Test
     @DisplayName("한정 수량 쿠폰을 동시에 발급할 때 정확히 50명만 발급받아야 함")
@@ -68,7 +79,9 @@ class CouponConcurrencyTest {
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    User user = new User();
+                    User user = User.builder()
+                            .point(0L)
+                            .build();
                     userRepository.save(user);
                     couponService.issueCoupon(user.getId(), request);
                     successCount.incrementAndGet();
@@ -133,7 +146,9 @@ class CouponConcurrencyTest {
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    User user = new User();
+                    User user = User.builder()
+                            .point(0L)
+                            .build();
                     userRepository.save(user);
                     couponService.issueCoupon(user.getId(), request);
                     successCount.incrementAndGet();
@@ -186,7 +201,9 @@ class CouponConcurrencyTest {
         IssueCouponRequest request = new IssueCouponRequest(coupon.getId());
 
         // 한 명의 사용자 생성
-        User user = new User();
+        User user = User.builder()
+                .point(0L)
+                .build();
         userRepository.save(user);
 
         int threadCount = 50; // 동일 사용자가 50번 발급 시도

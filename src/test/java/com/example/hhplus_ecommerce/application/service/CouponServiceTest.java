@@ -3,9 +3,9 @@ package com.example.hhplus_ecommerce.application.service;
 import com.example.hhplus_ecommerce.domain.model.Coupon;
 import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.domain.model.UserCoupon;
-import com.example.hhplus_ecommerce.domain.repository.CouponRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserCouponRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.CouponRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserCouponRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
@@ -86,7 +86,7 @@ class CouponServiceTest {
         // given
         Long userId = 1L;
         Long couponId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Coupon coupon = Coupon.builder()
                 .name("테스트 쿠폰")
                 .discountType(Coupon.DiscountType.PERCENTAGE)
@@ -143,7 +143,7 @@ class CouponServiceTest {
         // given
         Long userId = 1L;
         Long couponId = 999L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -164,7 +164,7 @@ class CouponServiceTest {
         // given
         Long userId = 1L;
         Long couponId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Coupon coupon = Coupon.builder()
                 .name("테스트 쿠폰")
                 .discountType(Coupon.DiscountType.PERCENTAGE)
@@ -201,15 +201,15 @@ class CouponServiceTest {
         // given
         Long userId = 1L;
         Long couponId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         UserCoupon userCoupon = UserCoupon.builder()
+                .id(1L)
                 .userId(userId)
                 .couponId(couponId)
                 .build();
-        userCoupon.assignId(1L);
-        userCoupon.onCreate();
 
         Coupon coupon = Coupon.builder()
+                .id(1L)
                 .name("테스트 쿠폰")
                 .discountType(Coupon.DiscountType.PERCENTAGE)
                 .discountValue(10L)
@@ -218,7 +218,6 @@ class CouponServiceTest {
                 .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(7))
                 .build();
-        coupon.assignId(couponId);
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(userCouponRepository.findByUserId(userId)).willReturn(List.of(userCoupon));

@@ -3,9 +3,9 @@ package com.example.hhplus_ecommerce.application.service;
 import com.example.hhplus_ecommerce.domain.model.Order;
 import com.example.hhplus_ecommerce.domain.model.OrderItem;
 import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.domain.repository.OrderItemRepository;
-import com.example.hhplus_ecommerce.domain.repository.OrderRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.OrderItemRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.OrderRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
@@ -44,7 +44,7 @@ class UserOrderServiceTest {
     void getUserOrders_Success() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Order order1 = Order.builder()
                 .userId(userId)
                 .totalAmount(20000L)
@@ -93,7 +93,7 @@ class UserOrderServiceTest {
         // given
         Long userId = 1L;
         Long orderId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Order order = Order.builder()
                 .userId(userId)
                 .totalAmount(20000L)
@@ -145,7 +145,7 @@ class UserOrderServiceTest {
         // given
         Long userId = 1L;
         Long orderId = 999L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(orderRepository.findById(orderId)).willReturn(Optional.empty());
@@ -164,7 +164,7 @@ class UserOrderServiceTest {
         // given
         Long userId = 1L;
         Long orderId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Order order = Order.builder()
                 .userId(2L) // 다른 사용자의 주문
                 .totalAmount(20000L)

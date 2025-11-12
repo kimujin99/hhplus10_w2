@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.*;
-import com.example.hhplus_ecommerce.domain.repository.*;
+import com.example.hhplus_ecommerce.infrastructure.repository.*;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
@@ -50,7 +50,7 @@ class MakePaymentServiceTest {
         // given
         Long orderId = 1L;
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(50000L);
 
         Order order = Order.builder()
@@ -136,7 +136,7 @@ class MakePaymentServiceTest {
         // given
         Long orderId = 1L;
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(10000L);
 
         Order order = Order.builder()

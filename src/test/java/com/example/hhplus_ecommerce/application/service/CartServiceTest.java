@@ -3,9 +3,9 @@ package com.example.hhplus_ecommerce.application.service;
 import com.example.hhplus_ecommerce.domain.model.CartItem;
 import com.example.hhplus_ecommerce.domain.model.Product;
 import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.domain.repository.CartItemRepository;
-import com.example.hhplus_ecommerce.domain.repository.ProductRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.CartItemRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
@@ -47,7 +47,9 @@ class CartServiceTest {
     void getUserCart_Success() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder()
+                .point(0L)
+                .build();
         CartItem cartItem1 = CartItem.builder()
                 .userId(userId)
                 .productId(1L)
@@ -101,7 +103,7 @@ class CartServiceTest {
         // given
         Long userId = 1L;
         Long productId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -144,7 +146,7 @@ class CartServiceTest {
         // given
         Long userId = 1L;
         Long productId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -186,7 +188,7 @@ class CartServiceTest {
         // given
         Long userId = 1L;
         Long productId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -231,7 +233,7 @@ class CartServiceTest {
         // given
         Long userId = 1L;
         Long productId = 999L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         AddCartItemRequest request = new AddCartItemRequest(productId, 5);
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -260,14 +262,14 @@ class CartServiceTest {
                 .build();
 
         given(cartItemRepository.findById(cartItemId)).willReturn(Optional.of(cartItem));
-        doNothing().when(cartItemRepository).delete(cartItemId);
+        doNothing().when(cartItemRepository).deleteById(cartItemId);
 
         // when
         cartService.deleteCartItem(cartItemId);
 
         // then
         verify(cartItemRepository).findById(cartItemId);
-        verify(cartItemRepository).delete(cartItemId);
+        verify(cartItemRepository).deleteById(cartItemId);
     }
 
     @Test
@@ -282,6 +284,6 @@ class CartServiceTest {
                 .isInstanceOf(BaseException.class)
                 .hasFieldOrPropertyWithValue("errorCode", CartErrorCode.CART_ITEM_NOT_FOUND);
         verify(cartItemRepository).findById(cartItemId);
-        verify(cartItemRepository, never()).delete(any());
+        verify(cartItemRepository, never()).deleteById((Long) any());
     }
 }

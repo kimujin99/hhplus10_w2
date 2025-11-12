@@ -2,8 +2,8 @@ package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.PointHistory;
 import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.domain.repository.PointHistoryRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.PointHistoryRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
@@ -41,7 +41,7 @@ class UserServiceTest {
     void getPoint_Success() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(10000L);
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -77,7 +77,7 @@ class UserServiceTest {
     void getPointHistory_Success() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         PointHistory history1 = PointHistory.builder()
                 .userId(userId)
                 .transactionType(PointHistory.TransactionType.CHARGE)
@@ -123,7 +123,7 @@ class UserServiceTest {
     void chargePoint_Success() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         ChargePointRequest request = new ChargePointRequest(5000L);
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -166,7 +166,7 @@ class UserServiceTest {
     void chargePoint_Fail_InvalidAmount() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         ChargePointRequest request = new ChargePointRequest(500L); // 1000원 단위가 아님
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));

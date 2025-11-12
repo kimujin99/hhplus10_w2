@@ -14,7 +14,7 @@ class UserTest {
     @DisplayName("포인트 충전 성공 - 1000원 단위")
     void chargePoint_Success() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Long chargeAmount = 5000L;
 
         // when
@@ -28,7 +28,7 @@ class UserTest {
     @DisplayName("포인트 충전 실패 - 0원 이하")
     void chargePoint_Fail_ZeroOrNegative() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
 
         // when & then
         assertAll(
@@ -45,7 +45,7 @@ class UserTest {
     @DisplayName("포인트 충전 실패 - 1000원 단위가 아님")
     void chargePoint_Fail_NotMultipleOf1000() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
 
         // when & then
         assertAll(
@@ -62,7 +62,7 @@ class UserTest {
     @DisplayName("포인트 사용 성공")
     void usePoint_Success() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(10000L);
 
         // when
@@ -76,7 +76,7 @@ class UserTest {
     @DisplayName("포인트 사용 실패 - 잔액 부족")
     void usePoint_Fail_InsufficientPoint() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(5000L);
 
         // when & then
@@ -89,7 +89,7 @@ class UserTest {
     @DisplayName("포인트 사용 실패 - 0원 이하")
     void usePoint_Fail_ZeroOrNegative() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(5000L);
 
         // when & then
@@ -107,7 +107,7 @@ class UserTest {
     @DisplayName("포인트 충전 및 사용 복합 시나리오")
     void complexScenario() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
 
         // when & then
         user.chargePoint(10000L);

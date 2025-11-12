@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.*;
-import com.example.hhplus_ecommerce.domain.repository.*;
+import com.example.hhplus_ecommerce.infrastructure.repository.*;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.*;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
@@ -53,7 +53,7 @@ class MakeOrderServiceTest {
     void execute_Success_WithoutCoupon() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -111,7 +111,7 @@ class MakeOrderServiceTest {
         // given
         Long userId = 1L;
         Long userCouponId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -195,7 +195,7 @@ class MakeOrderServiceTest {
     void execute_Fail_EmptyCart() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         OrderRequest request = new OrderRequest(userId, "홍길동", "서울시", null);
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -214,7 +214,7 @@ class MakeOrderServiceTest {
     void execute_Fail_InsufficientStock() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -249,7 +249,7 @@ class MakeOrderServiceTest {
         // given
         Long userId = 1L;
         Long userCouponId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -287,7 +287,7 @@ class MakeOrderServiceTest {
         // given
         Long userId = 1L;
         Long userCouponId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")

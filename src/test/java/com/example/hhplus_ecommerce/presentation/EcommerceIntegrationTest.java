@@ -3,25 +3,28 @@ package com.example.hhplus_ecommerce.presentation;
 import com.example.hhplus_ecommerce.domain.model.Coupon;
 import com.example.hhplus_ecommerce.domain.model.Product;
 import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.domain.repository.CouponRepository;
-import com.example.hhplus_ecommerce.domain.repository.ProductRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.CouponRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.dto.CartDto.*;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
-import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 
@@ -31,8 +34,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Transactional
+@Testcontainers
 class EcommerceIntegrationTest {
+
+    @Container
+    static MySQLContainer<?> container = new MySQLContainer<>("mysql:8.0.33")
+            .withDatabaseName("test")
+            .withUsername("test")
+            .withPassword("test")
+            .withInitScript("schema.sql");
+
+    @DynamicPropertySource
+    static void setDatasourceProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", container::getJdbcUrl);
+        registry.add("spring.datasource.username", container::getUsername);
+        registry.add("spring.datasource.password", container::getPassword);
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -49,102 +67,38 @@ class EcommerceIntegrationTest {
     @Autowired
     private CouponRepository couponRepository;
 
-    @BeforeEach
-    void setUp() {
-        // 각 테스트마다 필요한 초기 데이터 생성
-        setupUsers();
-        setupProducts();
-        setupCoupons();
+    private Long getSavedUserId() {
+        User user = userRepository.save(User.builder().build());
+        return user.getId();
     }
 
-    private void setupUsers() {
-        for (int i = 1; i <= 10; i++) {
-            userRepository.save(new User());
-        }
-    }
+    @Test
+    @DisplayName("전체 E-commerce 플로우 통합 테스트: 포인트 충전 → 상품 조회 → 장바구니 추가 → 쿠폰 발급 → 주문 → 결제")
+    void fullEcommerceFlow_Success() throws Exception {
+        // 1. 사용자 생성
+        Long userId = getSavedUserId();
 
-    private void setupProducts() {
-        productRepository.save(Product.builder()
+        // 2. 상품 생성
+        Product product = productRepository.save(Product.builder()
                 .productName("맥북 프로")
                 .description("애플 맥북 프로 16인치")
                 .price(2000000L)
                 .originalStockQuantity(100)
                 .stockQuantity(100)
                 .build());
+        Long productId = product.getId();
 
-        productRepository.save(Product.builder()
-                .productName("아이패드")
-                .description("애플 아이패드 프로 12.9인치")
-                .price(1000000L)
-                .originalStockQuantity(150)
-                .stockQuantity(150)
-                .build());
-
-        productRepository.save(Product.builder()
-                .productName("에어팟")
-                .description("애플 에어팟 프로 2세대")
-                .price(300000L)
-                .originalStockQuantity(200)
-                .stockQuantity(200)
-                .build());
-
-        productRepository.save(Product.builder()
-                .productName("아이폰")
-                .description("애플 아이폰 15 Pro")
-                .price(1500000L)
-                .originalStockQuantity(120)
-                .stockQuantity(120)
-                .build());
-
-        productRepository.save(Product.builder()
-                .productName("애플워치")
-                .description("애플 워치 시리즈 9")
-                .price(500000L)
-                .originalStockQuantity(180)
-                .stockQuantity(180)
-                .build());
-    }
-
-    private void setupCoupons() {
-        LocalDateTime now = LocalDateTime.now();
-
-        couponRepository.save(Coupon.builder()
-                .name("5000원 할인 쿠폰")
+        // 3. 쿠폰 생성
+        Coupon coupon = couponRepository.save(Coupon.builder()
+                .name("할인 쿠폰")
                 .discountType(Coupon.DiscountType.FIXED)
-                .discountValue(5000L)
-                .totalQuantity(100)
+                .discountValue(50000L)
+                .totalQuantity(10)
                 .issuedQuantity(0)
-                .validFrom(now.minusDays(1))
-                .validUntil(now.plusDays(30))
+                .validFrom(LocalDateTime.now())
+                .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
-
-        couponRepository.save(Coupon.builder()
-                .name("10% 할인 쿠폰")
-                .discountType(Coupon.DiscountType.PERCENTAGE)
-                .discountValue(10L)
-                .totalQuantity(50)
-                .issuedQuantity(0)
-                .validFrom(now.minusDays(1))
-                .validUntil(now.plusDays(30))
-                .build());
-
-        couponRepository.save(Coupon.builder()
-                .name("20000원 할인 쿠폰")
-                .discountType(Coupon.DiscountType.FIXED)
-                .discountValue(20000L)
-                .totalQuantity(30)
-                .issuedQuantity(0)
-                .validFrom(now.minusDays(1))
-                .validUntil(now.plusDays(30))
-                .build());
-    }
-
-    @Test
-    @DisplayName("전체 E-commerce 플로우 통합 테스트: 포인트 충전 → 상품 조회 → 장바구니 추가 → 쿠폰 발급 → 주문 → 결제")
-    void fullEcommerceFlow_Success() throws Exception {
-        Long userId = 1L;
-        Long productId = 1L;
-        Long couponId = 1L;
+        Long couponId = coupon.getId();
 
         // 1. 사용자 포인트 조회 (초기 포인트 확인)
         mockMvc.perform(get("/api/v1/users/{userId}/points", userId))
@@ -160,7 +114,8 @@ class EcommerceIntegrationTest {
                         .content(objectMapper.writeValueAsString(chargeRequest)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(userId));
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.point").exists());
 
         // 3. 포인트 히스토리 조회
         mockMvc.perform(get("/api/v1/users/{userId}/points/history", userId))
@@ -314,18 +269,29 @@ class EcommerceIntegrationTest {
     @Test
     @DisplayName("통합 테스트: 쿠폰 없이 주문 및 결제")
     void fullEcommerceFlow_WithoutCoupon() throws Exception {
-        Long userId = 2L;
-        Long productId = 2L;
+        // 1. 사용자 생성
+        User user = userRepository.save(User.builder().build());
+        Long userId = user.getId(); // 동적 ID 사용
 
-        // 1. 포인트 충전
-        ChargePointRequest chargeRequest = new ChargePointRequest(1000000L);
+        // 2. 상품 생성
+        Product product = productRepository.save(Product.builder()
+                .productName("맥북 프로")
+                .description("애플 맥북 프로 16인치")
+                .price(2000000L)
+                .originalStockQuantity(100)
+                .stockQuantity(100)
+                .build());
+        Long productId = product.getId();
+
+        // 3. 포인트 충전
+        ChargePointRequest chargeRequest = new ChargePointRequest(3000000L);
         mockMvc.perform(post("/api/v1/users/{userId}/points/charge", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(chargeRequest)))
                 .andDo(print())
                 .andExpect(status().isOk());
 
-        // 2. 장바구니에 상품 추가
+        // 4. 장바구니에 상품 추가
         AddCartItemRequest addCartRequest = new AddCartItemRequest(productId, 1);
         mockMvc.perform(post("/api/v1/users/{userId}/cart", userId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -333,7 +299,7 @@ class EcommerceIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk());
 
-        // 3. 주문 생성 (쿠폰 없음)
+        // 5. 주문 생성 (쿠폰 없음)
         OrderRequest orderRequest = new OrderRequest(userId, "이영희", "서울시 서초구", null);
         MvcResult orderResult = mockMvc.perform(post("/api/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -343,7 +309,7 @@ class EcommerceIntegrationTest {
                 .andExpect(jsonPath("$.discountAmount").value(0))
                 .andReturn();
 
-        // 4. 결제 처리
+        // 6. 결제 처리
         String orderResponseJson = orderResult.getResponse().getContentAsString();
         Long orderId = objectMapper.readTree(orderResponseJson)
                 .get("orderId")
@@ -358,8 +324,18 @@ class EcommerceIntegrationTest {
     @Test
     @DisplayName("통합 테스트: 재고 부족으로 주문 실패")
     void orderFlow_InsufficientStock() throws Exception {
-        Long userId = 3L;
-        Long productId = 1L;
+        // 1. 사용자 생성
+        Long userId = getSavedUserId();
+
+        // 2. 상품 생성
+        Product product = productRepository.save(Product.builder()
+                .productName("맥북 프로")
+                .description("애플 맥북 프로 16인치")
+                .price(2000000L)
+                .originalStockQuantity(100)
+                .stockQuantity(0)
+                .build());
+        Long productId = product.getId();
 
         // 1. 포인트 충전
         ChargePointRequest chargeRequest = new ChargePointRequest(10000000L);
@@ -383,16 +359,18 @@ class EcommerceIntegrationTest {
     @Test
     @DisplayName("통합 테스트: 포인트 부족으로 결제 실패")
     void paymentFlow_InsufficientPoint() throws Exception {
-        Long userId = 4L;
-        Long productId = 1L;
+        // 1. 사용자 생성
+        Long userId = getSavedUserId();
 
-        // 1. 포인트 충전 (부족한 금액)
-        ChargePointRequest chargeRequest = new ChargePointRequest(1000L);
-        mockMvc.perform(post("/api/v1/users/{userId}/points/charge", userId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(chargeRequest)))
-                .andDo(print())
-                .andExpect(status().isOk());
+        // 2. 상품 생성
+        Product product = productRepository.save(Product.builder()
+                .productName("맥북 프로")
+                .description("애플 맥북 프로 16인치")
+                .price(2000000L)
+                .originalStockQuantity(100)
+                .stockQuantity(100)
+                .build());
+        Long productId = product.getId();
 
         // 2. 장바구니에 고가 상품 추가
         AddCartItemRequest addCartRequest = new AddCartItemRequest(productId, 1);
@@ -427,45 +405,125 @@ class EcommerceIntegrationTest {
     @Test
     @DisplayName("통합 테스트: 쿠폰 품절로 발급 실패")
     void couponFlow_SoldOut() throws Exception {
-        Long userId = 5L;
-        Long limitedCouponId = 2L; // 수량이 제한된 쿠폰
+        // 1. 재고가 제한된 쿠폰 생성
+        Coupon coupon = couponRepository.save(Coupon.builder()
+                .name("할인 쿠폰")
+                .discountType(Coupon.DiscountType.FIXED)
+                .discountValue(50000L)
+                .totalQuantity(10)
+                .issuedQuantity(9)
+                .validFrom(LocalDateTime.now())
+                .validUntil(LocalDateTime.now().plusDays(2))
+                .build());
+        Long limitedCouponId = coupon.getId();
 
-        // 쿠폰 발급 (품절 예상)
         IssueCouponRequest request = new IssueCouponRequest(limitedCouponId);
 
-        // 여러 번 발급 시도하여 품절 상황 유도
-        for (int i = 0; i < 10; i++) {
-            mockMvc.perform(post("/api/v1/users/{userId}/coupons", userId + i)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andDo(print());
-        }
+        // 마지막 재고 발급
+        Long userId1 = getSavedUserId();
+        mockMvc.perform(post("/api/v1/users/{userId}/coupons", userId1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        // 재고 소진 확인
+        mockMvc.perform(get("/api/v1/coupons/{couponId}", limitedCouponId))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.issuedQuantity").value(10));
+
+        // 재고 부족 상태 발급
+        Long userId2 = getSavedUserId();
+        mockMvc.perform(post("/api/v1/users/{userId}/coupons", userId2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                        .andDo(print())
+                        .andExpect(status().isConflict())
+                        .andExpect(jsonPath("$.code").exists())
+                        .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    @DisplayName("통합 테스트: 쿠폰 중복 발급 실패")
+    void couponFlow_Duplicate() throws Exception {
+        // 1. 쿠폰 생성
+        Coupon coupon = couponRepository.save(Coupon.builder()
+                .name("할인 쿠폰")
+                .discountType(Coupon.DiscountType.FIXED)
+                .discountValue(50000L)
+                .totalQuantity(10)
+                .issuedQuantity(0)
+                .validFrom(LocalDateTime.now())
+                .validUntil(LocalDateTime.now().plusDays(2))
+                .build());
+        Long couponId = coupon.getId();
+
+        IssueCouponRequest request = new IssueCouponRequest(couponId);
+
+        // 쿠폰 발급
+        Long userId = getSavedUserId();
+        mockMvc.perform(post("/api/v1/users/{userId}/coupons", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        // 중복 발급 시도
+        mockMvc.perform(post("/api/v1/users/{userId}/coupons", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
     @DisplayName("통합 테스트: 인기 상품 조회")
     void popularProductsFlow() throws Exception {
-        // 1. 여러 상품 조회로 조회수 증가
-        for (Long productId = 1L; productId <= 5L; productId++) {
-            mockMvc.perform(get("/api/v1/products/{productId}", productId))
-                    .andDo(print())
-                    .andExpect(status().isOk());
-        }
+        // 1. 인기도가 다른 상품 6개 생성 (viewCount + salesRatio * 100 * 2)
+        // (1위) 인기도=203
+        Product p1 = productRepository.save(Product.builder()
+                .originalStockQuantity(10)
+                .stockQuantity(0)
+                .viewCount(3)
+                .build());
+        // (2위) 인기도=202
+        Product p2 = productRepository.save(Product.builder()
+                .originalStockQuantity(10)
+                .stockQuantity(0)
+                .viewCount(2)
+                .build());
 
         // 2. 인기 상품 목록 조회
         mockMvc.perform(get("/api/v1/products/popular"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].productId").exists())
+                .andExpect(jsonPath("$[1].productId").exists());
+
     }
 
     @Test
     @DisplayName("통합 테스트: 장바구니 상품 삭제")
     void cartItemDeletionFlow() throws Exception {
-        Long userId = 6L;
-        Long productId = 3L;
+        // 1. 사용자 생성
+        Long userId = getSavedUserId();
 
-        // 1. 장바구니에 상품 추가
+        // 2. 상품 생성
+        Product product = productRepository.save(Product.builder()
+                .productName("맥북 프로")
+                .description("애플 맥북 프로 16인치")
+                .price(2000000L)
+                .originalStockQuantity(100)
+                .stockQuantity(100)
+                .build());
+        Long productId = product.getId();
+
+        // 3. 장바구니에 상품 추가
         AddCartItemRequest addCartRequest = new AddCartItemRequest(productId, 1);
         MvcResult addResult = mockMvc.perform(post("/api/v1/users/{userId}/cart", userId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -474,21 +532,22 @@ class EcommerceIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // 2. cartItemId 추출
+        // 4. cartItemId 추출
         String addResponseJson = addResult.getResponse().getContentAsString();
         Long cartItemId = objectMapper.readTree(addResponseJson)
                 .get("cartItemId")
                 .asLong();
 
-        // 3. 장바구니 상품 삭제
+        // 5. 장바구니 상품 삭제
         mockMvc.perform(delete("/api/v1/cart/{cartItemId}", cartItemId))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
-        // 4. 장바구니 조회로 삭제 확인
+        // 6. 장바구니 조회로 삭제 확인
         mockMvc.perform(get("/api/v1/users/{userId}/cart", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }
