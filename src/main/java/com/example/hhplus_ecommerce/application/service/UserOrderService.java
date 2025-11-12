@@ -2,9 +2,9 @@ package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.Order;
 import com.example.hhplus_ecommerce.domain.model.OrderItem;
-import com.example.hhplus_ecommerce.domain.repository.OrderItemRepository;
-import com.example.hhplus_ecommerce.domain.repository.OrderRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.OrderItemRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.OrderRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;

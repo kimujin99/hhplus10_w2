@@ -2,9 +2,9 @@ package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.CartItem;
 import com.example.hhplus_ecommerce.domain.model.Product;
-import com.example.hhplus_ecommerce.domain.repository.CartItemRepository;
-import com.example.hhplus_ecommerce.domain.repository.ProductRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.CartItemRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
@@ -71,6 +71,6 @@ public class CartService {
         cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new NotFoundException(CartErrorCode.CART_ITEM_NOT_FOUND));
 
-        cartItemRepository.delete(cartItemId);
+        cartItemRepository.deleteById(cartItemId);
     }
 }

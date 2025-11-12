@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.*;
-import com.example.hhplus_ecommerce.domain.repository.*;
+import com.example.hhplus_ecommerce.infrastructure.repository.*;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
