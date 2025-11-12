@@ -2,24 +2,29 @@ package com.example.hhplus_ecommerce.domain.model;
 
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
-import lombok.Builder;
-import lombok.Getter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 
 @Getter
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class UserCoupon extends BaseEntity {
+    @Column(nullable = false)
     private Long userId;
+    @Column(nullable = false)
     private Long couponId;
     private Long orderId;
-    private UserCouponStatus status;
-
-    // TODO: 인메모리 구현용. JPA 전환 시 제거
-    @Builder
-    public UserCoupon(Long userId, Long couponId) {
-        this.userId = userId;
-        this.couponId = couponId;
-        this.orderId = null;
-        this.status = UserCouponStatus.ISSUED;
-    }
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("ISSUED")
+    @Builder.Default
+    private UserCouponStatus status = UserCouponStatus.ISSUED;
 
     public void use() {
         if(isUsed()) {

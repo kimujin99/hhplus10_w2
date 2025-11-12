@@ -2,28 +2,28 @@ package com.example.hhplus_ecommerce.domain.model;
 
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
-import lombok.Builder;
-import lombok.Getter;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 
 @Getter
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
+@Table(name = "ORDER_TABLE")
 public class Order extends BaseEntity {
+    @Column(nullable = false)
     private Long userId;
     private Long totalAmount;
     private Long discountAmount;
-    private OrderStatus status;
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("PENDING")
+    @Builder.Default
+    private OrderStatus status = OrderStatus.PENDING;
     private String ordererName;
     private String deliveryAddress;
-
-    // TODO: 인메모리 구현용. JPA 전환 시 제거
-    @Builder
-    public Order(Long userId, Long totalAmount, Long discountAmount, String ordererName, String deliveryAddress) {
-        this.userId = userId;
-        this.totalAmount = totalAmount;
-        this.discountAmount = discountAmount;
-        this.status = OrderStatus.PENDING;
-        this.ordererName = ordererName;
-        this.deliveryAddress = deliveryAddress;
-    }
 
     public void confirm() {
         if(this.status != OrderStatus.PENDING) {

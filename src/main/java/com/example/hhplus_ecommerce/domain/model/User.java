@@ -3,16 +3,20 @@ package com.example.hhplus_ecommerce.domain.model;
 import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
-import lombok.Getter;
+import jakarta.persistence.Entity;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 
 @Getter
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class User extends BaseEntity {
-    private Long point;
-
-    // TODO: 인메모리 구현용. JPA 전환 시 제거
-    public User() {
-        this.point = 0L;
-    }
+    @ColumnDefault("0L")
+    @Builder.Default
+    private Long point = 0L;
 
     public void usePoint(Long point) {
         if(point <= 0) {

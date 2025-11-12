@@ -2,13 +2,20 @@ package com.example.hhplus_ecommerce.domain.model;
 
 import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CommonErrorCode;
-import lombok.Builder;
-import lombok.Getter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Getter
-@Builder
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class CartItem extends BaseEntity {
+    @Column(nullable = false)
     private Long userId;
+    @Column(nullable = false)
     private Long productId;
     private String productName;
     private Long price;

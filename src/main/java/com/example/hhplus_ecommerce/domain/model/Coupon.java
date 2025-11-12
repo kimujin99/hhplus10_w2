@@ -2,15 +2,22 @@ package com.example.hhplus_ecommerce.domain.model;
 
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
-import lombok.Builder;
-import lombok.Getter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Builder
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class Coupon extends BaseEntity {
     private String name;
+    @Enumerated(EnumType.STRING)
     private DiscountType discountType;
     private Long discountValue;
     private Integer totalQuantity;

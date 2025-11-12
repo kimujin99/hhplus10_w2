@@ -2,28 +2,25 @@ package com.example.hhplus_ecommerce.domain.model;
 
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
-import lombok.Builder;
-import lombok.Getter;
+import jakarta.persistence.Entity;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 
 @Getter
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class Product extends BaseEntity {
     private String productName;
     private String description;
     private Long price;
     private Integer originalStockQuantity;
     private Integer stockQuantity;
-    private Integer viewCount;
-
-    // TODO: 인메모리 구현용. JPA 전환 시 제거
-    @Builder
-    public Product(String productName, String description, Long price, Integer originalStockQuantity, Integer stockQuantity) {
-        this.productName = productName;
-        this.description = description;
-        this.price = price;
-        this.originalStockQuantity = originalStockQuantity;
-        this.stockQuantity = stockQuantity;
-        this.viewCount = 0;
-    }
+    @ColumnDefault("0")
+    @Builder.Default
+    private Integer viewCount = 0;
 
     public void addStockQuantity(Integer stockQuantity) {
         this.stockQuantity += stockQuantity;
@@ -36,8 +33,6 @@ public class Product extends BaseEntity {
         this.stockQuantity -= stockQuantity;
     }
 
-
-    // TODO: 실제 DB 사용시 제거. 인메모리 인기상품 집계 구현용.
     public Integer getPurchaseCount() {
         return this.originalStockQuantity - this.stockQuantity;
     }
