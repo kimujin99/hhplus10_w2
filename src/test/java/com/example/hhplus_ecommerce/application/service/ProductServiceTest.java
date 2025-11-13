@@ -1,9 +1,10 @@
 package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.Product;
-import com.example.hhplus_ecommerce.domain.repository.ProductRepository;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -52,9 +54,12 @@ class ProductServiceTest {
         List<ProductResponse> result = productService.getProducts();
 
         // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).productName()).isEqualTo("상품1");
-        assertThat(result.get(1).productName()).isEqualTo("상품2");
+        assertAll(
+                () -> assertThat(result).hasSize(2),
+                () -> assertThat(result.get(0).productName()).isEqualTo("상품1"),
+                () -> assertThat(result.get(1).productName()).isEqualTo("상품2")
+        );
+
         verify(productRepository).findAll();
     }
 
@@ -70,18 +75,20 @@ class ProductServiceTest {
                 .stockQuantity(10)
                 .build();
 
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
-        given(productRepository.save(any(Product.class))).willReturn(product);
+        given(productRepository.findByIdOrThrow(productId)).willReturn(product);
+        doNothing().when(productRepository).incrementViewCount(productId);
 
         // when
         ProductResponse result = productService.getProduct(productId);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.productName()).isEqualTo("테스트 상품");
-        assertThat(product.getViewCount()).isEqualTo(1);
-        verify(productRepository).findById(productId);
-        verify(productRepository).save(product);
+        assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.productName()).isEqualTo("테스트 상품")
+        );
+
+        verify(productRepository).findByIdOrThrow(productId);
+        verify(productRepository).incrementViewCount(productId);
     }
 
     @Test
@@ -89,14 +96,15 @@ class ProductServiceTest {
     void getProduct_Fail_ProductNotFound() {
         // given
         Long productId = 999L;
-        given(productRepository.findById(productId)).willReturn(Optional.empty());
+        given(productRepository.findByIdOrThrow(productId))
+                .willThrow(new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> productService.getProduct(productId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRODUCT_NOT_FOUND);
-        verify(productRepository).findById(productId);
-        verify(productRepository, never()).save(any());
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.PRODUCT_NOT_FOUND);
+        verify(productRepository).findByIdOrThrow(productId);
+        verify(productRepository, never()).incrementViewCount(any());
     }
 
     @Test
@@ -111,15 +119,18 @@ class ProductServiceTest {
                 .stockQuantity(50)
                 .build();
 
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(productRepository.findByIdOrThrow(productId)).willReturn(product);
 
         // when
         ProductStockResponse result = productService.getProductStock(productId);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.stockQuantity()).isEqualTo(50);
-        verify(productRepository).findById(productId);
+        assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.stockQuantity()).isEqualTo(50)
+        );
+
+        verify(productRepository).findByIdOrThrow(productId);
     }
 
     @Test
@@ -127,13 +138,14 @@ class ProductServiceTest {
     void getProductStock_Fail_ProductNotFound() {
         // given
         Long productId = 999L;
-        given(productRepository.findById(productId)).willReturn(Optional.empty());
+        given(productRepository.findByIdOrThrow(productId))
+                .willThrow(new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> productService.getProductStock(productId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRODUCT_NOT_FOUND);
-        verify(productRepository).findById(productId);
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.PRODUCT_NOT_FOUND);
+        verify(productRepository).findByIdOrThrow(productId);
     }
 
     @Test
@@ -165,8 +177,11 @@ class ProductServiceTest {
         List<PopularProductResponse> result = productService.getPopularProducts();
 
         // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).productId()).isEqualTo(product2.getId());
+        assertAll(
+                () -> assertThat(result).hasSize(2),
+                () -> assertThat(result.get(0).productId()).isEqualTo(product2.getId())
+        );
+
         verify(productRepository).findPopularProduct();
     }
 }

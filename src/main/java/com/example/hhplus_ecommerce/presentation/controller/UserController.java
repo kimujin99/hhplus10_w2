@@ -1,10 +1,10 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.UserService;
-import com.example.hhplus_ecommerce.presentation.common.ApiResponse;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,20 +17,20 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/{userId}/points")
-    public ApiResponse<PointResponse> getPoint(@PathVariable("userId") Long userId) {
-        return ApiResponse.success(userService.getPoint(userId));
+    public ResponseEntity<PointResponse> getPoint(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(userService.getPoint(userId));
     }
 
     @GetMapping("/{userId}/points/history")
-    public ApiResponse<List<PointHistoryResponse>> getPointHistory(@PathVariable("userId") Long userId) {
-        return ApiResponse.success(userService.getPointHistory(userId));
+    public ResponseEntity<List<PointHistoryResponse>> getPointHistory(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(userService.getPointHistory(userId));
     }
 
     @PostMapping("/{userId}/points/charge")
-    public ApiResponse<PointResponse> chargePoint(
+    public ResponseEntity<PointResponse> chargePoint(
             @PathVariable("userId") Long userId,
             @Valid @RequestBody ChargePointRequest request
     ) {
-        return ApiResponse.success(userService.chargePoint(userId, request));
+        return ResponseEntity.ok(userService.chargePoint(userId, request));
     }
 }

@@ -2,10 +2,13 @@ package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.PointHistory;
 import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.domain.repository.PointHistoryRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.infrastructure.repository.PointHistoryRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -39,18 +43,21 @@ class UserServiceTest {
     void getPoint_Success() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(10000L);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
 
         // when
         PointResponse result = userService.getPoint(userId);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.point()).isEqualTo(10000L);
-        verify(userRepository).findById(userId);
+        assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.point()).isEqualTo(10000L)
+        );
+
+        verify(userRepository).findByIdOrThrow(userId);
     }
 
     @Test
@@ -58,13 +65,14 @@ class UserServiceTest {
     void getPoint_Fail_UserNotFound() {
         // given
         Long userId = 999L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> userService.getPoint(userId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
+        verify(userRepository).findByIdOrThrow(userId);
     }
 
     @Test
@@ -72,7 +80,7 @@ class UserServiceTest {
     void getPointHistory_Success() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         PointHistory history1 = PointHistory.builder()
                 .userId(userId)
                 .transactionType(PointHistory.TransactionType.CHARGE)
@@ -86,7 +94,7 @@ class UserServiceTest {
                 .balanceAfter(7000L)
                 .build();
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(pointHistoryRepository.findByUserId(userId)).willReturn(List.of(history1, history2));
 
         // when
@@ -94,7 +102,7 @@ class UserServiceTest {
 
         // then
         assertThat(result).hasSize(2);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(pointHistoryRepository).findByUserId(userId);
     }
 
@@ -103,13 +111,14 @@ class UserServiceTest {
     void getPointHistory_Fail_UserNotFound() {
         // given
         Long userId = 999L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> userService.getPointHistory(userId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(pointHistoryRepository, never()).findByUserId(any());
     }
 
@@ -118,10 +127,10 @@ class UserServiceTest {
     void chargePoint_Success() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         ChargePointRequest request = new ChargePointRequest(5000L);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(userRepository.save(any(User.class))).willReturn(user);
         given(pointHistoryRepository.save(any(PointHistory.class))).willReturn(null);
 
@@ -129,9 +138,12 @@ class UserServiceTest {
         PointResponse result = userService.chargePoint(userId, request);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.point()).isEqualTo(5000L);
-        verify(userRepository).findById(userId);
+        assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.point()).isEqualTo(5000L)
+        );
+
+        verify(userRepository).findByIdOrThrow(userId);
         verify(userRepository).save(user);
         verify(pointHistoryRepository).save(any(PointHistory.class));
     }
@@ -142,13 +154,14 @@ class UserServiceTest {
         // given
         Long userId = 999L;
         ChargePointRequest request = new ChargePointRequest(5000L);
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> userService.chargePoint(userId, request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(userRepository, never()).save(any());
         verify(pointHistoryRepository, never()).save(any());
     }
@@ -158,16 +171,16 @@ class UserServiceTest {
     void chargePoint_Fail_InvalidAmount() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         ChargePointRequest request = new ChargePointRequest(500L); // 1000원 단위가 아님
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
 
         // when & then
         assertThatThrownBy(() -> userService.chargePoint(userId, request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CHARGE_AMOUNT);
-        verify(userRepository).findById(userId);
+                .isInstanceOf(BadRequestException.class)
+                .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(userRepository, never()).save(any());
         verify(pointHistoryRepository, never()).save(any());
     }

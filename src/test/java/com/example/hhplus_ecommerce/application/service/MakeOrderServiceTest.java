@@ -1,9 +1,10 @@
 package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.*;
-import com.example.hhplus_ecommerce.domain.repository.*;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.infrastructure.repository.*;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.*;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ class MakeOrderServiceTest {
     void execute_Success_WithoutCoupon() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -83,10 +84,9 @@ class MakeOrderServiceTest {
                 .build();
         OrderRequest request = new OrderRequest(userId, "홍길동", "서울시", null);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(cartItemRepository.findByUserId(userId)).willReturn(List.of(cartItem));
-        given(productRepository.findById(1L)).willReturn(Optional.of(product));
-        given(productRepository.save(any(Product.class))).willReturn(product);
+        given(productRepository.findByIdOrThrow(1L)).willReturn(product);
         given(orderRepository.save(any(Order.class))).willReturn(order);
         given(orderItemRepository.save(any(OrderItem.class))).willReturn(orderItem);
         doNothing().when(cartItemRepository).deleteByUserId(userId);
@@ -96,22 +96,21 @@ class MakeOrderServiceTest {
 
         // then
         assertThat(result).isNotNull();
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(cartItemRepository).findByUserId(userId);
-        verify(productRepository).findById(1L);
-        verify(productRepository).save(product);
+        verify(productRepository).findByIdOrThrow(1L);
         verify(orderRepository).save(any(Order.class));
         verify(orderItemRepository).save(any(OrderItem.class));
         verify(cartItemRepository).deleteByUserId(userId);
     }
 
     @Test
-    @DisplayName("주문 생성 성공 - 쿠폰 사용")
+    @DisplayName("주문 생성 성공")
     void execute_Success_WithCoupon() {
         // given
         Long userId = 1L;
         Long userCouponId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -125,11 +124,8 @@ class MakeOrderServiceTest {
                 .price(10000L)
                 .quantity(2)
                 .build();
-        UserCoupon userCoupon = UserCoupon.builder()
-                .userId(userId)
-                .couponId(1L)
-                .build();
         Coupon coupon = Coupon.builder()
+                .id(1L)
                 .name("테스트 쿠폰")
                 .discountType(Coupon.DiscountType.PERCENTAGE)
                 .discountValue(10L)
@@ -137,6 +133,10 @@ class MakeOrderServiceTest {
                 .issuedQuantity(1)
                 .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(7))
+                .build();
+        UserCoupon userCoupon = UserCoupon.builder()
+                .userId(userId)
+                .coupon(coupon)
                 .build();
         Order order = Order.builder()
                 .userId(userId)
@@ -154,13 +154,11 @@ class MakeOrderServiceTest {
                 .build();
         OrderRequest request = new OrderRequest(userId, "홍길동", "서울시", userCouponId);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(cartItemRepository.findByUserId(userId)).willReturn(List.of(cartItem));
-        given(productRepository.findById(1L)).willReturn(Optional.of(product));
-        given(userCouponRepository.findById(userCouponId)).willReturn(Optional.of(userCoupon));
-        given(couponRepository.findById(1L)).willReturn(Optional.of(coupon));
-        given(productRepository.save(any(Product.class))).willReturn(product);
-        given(userCouponRepository.save(any(UserCoupon.class))).willReturn(userCoupon);
+        given(productRepository.findByIdOrThrow(1L)).willReturn(product);
+        given(userCouponRepository.findByIdOrThrow(userCouponId)).willReturn(userCoupon);
+        given(couponRepository.findByIdOrThrow(1L)).willReturn(coupon);
         given(orderRepository.save(any(Order.class))).willReturn(order);
         given(orderItemRepository.save(any(OrderItem.class))).willReturn(orderItem);
         doNothing().when(cartItemRepository).deleteByUserId(userId);
@@ -170,9 +168,8 @@ class MakeOrderServiceTest {
 
         // then
         assertThat(result).isNotNull();
-        verify(userCouponRepository).findById(userCouponId);
-        verify(couponRepository).findById(1L);
-        verify(userCouponRepository, times(2)).save(userCoupon);
+        verify(userCouponRepository).findByIdOrThrow(userCouponId);
+        verify(couponRepository).findByIdOrThrow(1L);
     }
 
     @Test
@@ -180,13 +177,13 @@ class MakeOrderServiceTest {
     void execute_Fail_UserNotFound() {
         // given
         OrderRequest request = new OrderRequest(999L, "홍길동", "서울시", null);
-        given(userRepository.findById(999L)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(999L)).willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(999L);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
+        verify(userRepository).findByIdOrThrow(999L);
         verify(cartItemRepository, never()).findByUserId(any());
     }
 
@@ -195,17 +192,17 @@ class MakeOrderServiceTest {
     void execute_Fail_EmptyCart() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         OrderRequest request = new OrderRequest(userId, "홍길동", "서울시", null);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(cartItemRepository.findByUserId(userId)).willReturn(List.of());
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.CART_ITEM_NOT_FOUND);
-        verify(userRepository).findById(userId);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CartErrorCode.CART_ITEM_NOT_FOUND);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(cartItemRepository).findByUserId(userId);
     }
 
@@ -214,7 +211,7 @@ class MakeOrderServiceTest {
     void execute_Fail_InsufficientStock() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -230,17 +227,17 @@ class MakeOrderServiceTest {
                 .build();
         OrderRequest request = new OrderRequest(userId, "홍길동", "서울시", null);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(cartItemRepository.findByUserId(userId)).willReturn(List.of(cartItem));
-        given(productRepository.findById(1L)).willReturn(Optional.of(product));
+        given(productRepository.findByIdOrThrow(1L)).willReturn(product);
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INSUFFICIENT_STOCK);
-        verify(userRepository).findById(userId);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.INSUFFICIENT_STOCK);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(cartItemRepository).findByUserId(userId);
-        verify(productRepository).findById(1L);
+        verify(productRepository).findByIdOrThrow(1L);
     }
 
     @Test
@@ -249,7 +246,7 @@ class MakeOrderServiceTest {
         // given
         Long userId = 1L;
         Long userCouponId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -263,22 +260,23 @@ class MakeOrderServiceTest {
                 .price(10000L)
                 .quantity(2)
                 .build();
+        Coupon coupon = Coupon.builder().id(1L).build();
         UserCoupon userCoupon = UserCoupon.builder()
                 .userId(userId)
-                .couponId(1L)
+                .coupon(coupon)
                 .build();
         userCoupon.use();
         OrderRequest request = new OrderRequest(userId, "홍길동", "서울시", userCouponId);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(cartItemRepository.findByUserId(userId)).willReturn(List.of(cartItem));
-        given(productRepository.findById(1L)).willReturn(Optional.of(product));
-        given(userCouponRepository.findById(userCouponId)).willReturn(Optional.of(userCoupon));
+        given(productRepository.findByIdOrThrow(1L)).willReturn(product);
+        given(userCouponRepository.findByIdOrThrow(userCouponId)).willReturn(userCoupon);
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_ALREADY_USED);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_ALREADY_USED);
     }
 
     @Test
@@ -287,7 +285,7 @@ class MakeOrderServiceTest {
         // given
         Long userId = 1L;
         Long userCouponId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Product product = Product.builder()
                 .productName("테스트 상품")
                 .description("설명")
@@ -301,11 +299,8 @@ class MakeOrderServiceTest {
                 .price(10000L)
                 .quantity(2)
                 .build();
-        UserCoupon userCoupon = UserCoupon.builder()
-                .userId(userId)
-                .couponId(1L)
-                .build();
         Coupon coupon = Coupon.builder()
+                .id(1L)
                 .name("만료된 쿠폰")
                 .discountType(Coupon.DiscountType.PERCENTAGE)
                 .discountValue(10L)
@@ -314,17 +309,21 @@ class MakeOrderServiceTest {
                 .validFrom(LocalDateTime.now().minusDays(10))
                 .validUntil(LocalDateTime.now().minusDays(1))
                 .build();
+        UserCoupon userCoupon = UserCoupon.builder()
+                .userId(userId)
+                .coupon(coupon)
+                .build();
         OrderRequest request = new OrderRequest(userId, "홍길동", "서울시", userCouponId);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(cartItemRepository.findByUserId(userId)).willReturn(List.of(cartItem));
-        given(productRepository.findById(1L)).willReturn(Optional.of(product));
-        given(userCouponRepository.findById(userCouponId)).willReturn(Optional.of(userCoupon));
-        given(couponRepository.findById(1L)).willReturn(Optional.of(coupon));
+        given(productRepository.findByIdOrThrow(1L)).willReturn(product);
+        given(userCouponRepository.findByIdOrThrow(userCouponId)).willReturn(userCoupon);
+        given(couponRepository.findByIdOrThrow(1L)).willReturn(coupon);
 
         // when & then
         assertThatThrownBy(() -> makeOrderService.execute(request))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_EXPIRED);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_EXPIRED);
     }
 }

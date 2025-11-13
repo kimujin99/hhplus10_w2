@@ -1,43 +1,34 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
-import lombok.Builder;
-import lombok.Getter;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 
 @Getter
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class UserCoupon extends BaseEntity {
+    @Column(nullable = false)
     private Long userId;
-    private Long couponId;
-    private Long orderId;
-    private UserCouponStatus status;
 
-    // TODO: 인메모리 구현용. JPA 전환 시 제거
-    @Builder
-    public UserCoupon(Long userId, Long couponId) {
-        this.userId = userId;
-        this.couponId = couponId;
-        this.orderId = null;
-        this.status = UserCouponStatus.ISSUED;
-    }
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("ISSUED") @Builder.Default
+    private UserCouponStatus status = UserCouponStatus.ISSUED;
+
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false)
+    private Coupon coupon;
 
     public void use() {
         if(isUsed()) {
-            throw new BusinessException(ErrorCode.COUPON_ALREADY_USED);
+            throw new ConflictException(CouponErrorCode.COUPON_ALREADY_USED);
         }
         this.status = UserCouponStatus.USED;
-    }
-
-    public void assignOrderId(Long orderId) {
-        if(!isUsed()) {
-            throw new BusinessException(ErrorCode.COUPON_NOT_USED);
-        }
-        this.orderId = orderId;
-    }
-
-    public void restore() {
-        this.orderId = null;
-        this.status = UserCouponStatus.ISSUED;
     }
 
     public boolean isUsed() {

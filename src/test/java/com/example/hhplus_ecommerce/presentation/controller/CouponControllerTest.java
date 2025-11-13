@@ -1,8 +1,10 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.CouponService;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -69,13 +71,12 @@ class CouponControllerTest {
         mockMvc.perform(get("/api/v1/coupons"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].couponId").value(1))
-                .andExpect(jsonPath("$.data[0].name").value("5000원 할인 쿠폰"))
-                .andExpect(jsonPath("$.data[1].couponId").value(2))
-                .andExpect(jsonPath("$.data[1].name").value("10% 할인 쿠폰"));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].couponId").value(1))
+                .andExpect(jsonPath("$[0].name").value("5000원 할인 쿠폰"))
+                .andExpect(jsonPath("$[1].couponId").value(2))
+                .andExpect(jsonPath("$[1].name").value("10% 할인 쿠폰"));
     }
 
     @Test
@@ -104,11 +105,10 @@ class CouponControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.userCouponId").value(1))
-                .andExpect(jsonPath("$.data.userId").value(userId))
-                .andExpect(jsonPath("$.data.couponName").value("5000원 할인 쿠폰"))
-                .andExpect(jsonPath("$.data.status").value("UNUSED"));
+                .andExpect(jsonPath("$.userCouponId").value(1))
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.couponName").value("5000원 할인 쿠폰"))
+                .andExpect(jsonPath("$.status").value("UNUSED"));
     }
 
     @Test
@@ -118,15 +118,16 @@ class CouponControllerTest {
         Long userId = 1L;
         IssueCouponRequest request = new IssueCouponRequest(1L);
         when(couponService.issueCoupon(anyLong(), any(IssueCouponRequest.class)))
-                .thenThrow(new BusinessException(ErrorCode.COUPON_SOLD_OUT));
+                .thenThrow(new ConflictException(CouponErrorCode.COUPON_SOLD_OUT));
 
         // when & then
         mockMvc.perform(post("/api/v1/users/{userId}/coupons", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -136,15 +137,16 @@ class CouponControllerTest {
         Long userId = 1L;
         IssueCouponRequest request = new IssueCouponRequest(1L);
         when(couponService.issueCoupon(anyLong(), any(IssueCouponRequest.class)))
-                .thenThrow(new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED));
+                .thenThrow(new ConflictException(CouponErrorCode.COUPON_ALREADY_ISSUED));
 
         // when & then
         mockMvc.perform(post("/api/v1/users/{userId}/coupons", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -184,12 +186,11 @@ class CouponControllerTest {
         mockMvc.perform(get("/api/v1/users/{userId}/coupons", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].userId").value(userId))
-                .andExpect(jsonPath("$.data[0].status").value("UNUSED"))
-                .andExpect(jsonPath("$.data[1].status").value("USED"));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].userId").value(userId))
+                .andExpect(jsonPath("$[0].status").value("UNUSED"))
+                .andExpect(jsonPath("$[1].status").value("USED"));
     }
 
     @Test
@@ -203,9 +204,8 @@ class CouponControllerTest {
         mockMvc.perform(get("/api/v1/users/{userId}/coupons", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(0));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
@@ -214,12 +214,13 @@ class CouponControllerTest {
         // given
         Long userId = 999L;
         when(couponService.getUserCoupons(anyLong()))
-                .thenThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .thenThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         mockMvc.perform(get("/api/v1/users/{userId}/coupons", userId))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 }

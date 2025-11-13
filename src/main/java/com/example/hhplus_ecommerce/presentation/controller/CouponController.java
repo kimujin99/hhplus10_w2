@@ -1,10 +1,10 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.CouponService;
-import com.example.hhplus_ecommerce.presentation.common.ApiResponse;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,22 +17,29 @@ public class CouponController {
     private final CouponService couponService;
 
     @GetMapping("/coupons")
-    public ApiResponse<List<CouponResponse>> getCoupons() {
-        return ApiResponse.success(couponService.getCoupons());
+    public ResponseEntity<List<CouponResponse>> getCoupons() {
+        return ResponseEntity.ok(couponService.getCoupons());
+    }
+
+    @GetMapping("/coupons/{couponId}")
+    public ResponseEntity<CouponResponse> getCoupon(
+            @PathVariable Long couponId
+    ) {
+        return ResponseEntity.ok(couponService.getCoupon(couponId));
     }
 
     @PostMapping("/users/{userId}/coupons")
-    public ApiResponse<UserCouponResponse> issueCoupon(
+    public ResponseEntity<UserCouponResponse> issueCoupon(
             @PathVariable("userId") Long userId,
             @Valid @RequestBody IssueCouponRequest request
     ) {
-        return ApiResponse.success(couponService.issueCoupon(userId, request));
+        return ResponseEntity.ok(couponService.issueCoupon(userId, request));
     }
 
     @GetMapping("/users/{userId}/coupons")
-    public ApiResponse<List<UserCouponResponse>> getUserCoupons(
+    public ResponseEntity<List<UserCouponResponse>> getUserCoupons(
             @PathVariable("userId") Long userId
     ) {
-        return ApiResponse.success(couponService.getUserCoupons(userId));
+        return ResponseEntity.ok(couponService.getUserCoupons(userId));
     }
 }

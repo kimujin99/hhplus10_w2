@@ -3,10 +3,10 @@ package com.example.hhplus_ecommerce.presentation.controller;
 import com.example.hhplus_ecommerce.application.service.MakeOrderService;
 import com.example.hhplus_ecommerce.application.service.MakePaymentService;
 import com.example.hhplus_ecommerce.application.service.UserOrderService;
-import com.example.hhplus_ecommerce.presentation.common.ApiResponse;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,31 +21,31 @@ public class OrderController {
     private final UserOrderService userOrderService;
 
     @PostMapping("/orders")
-    public ApiResponse<OrderResponse> makeOrder (
+    public ResponseEntity<OrderResponse> makeOrder (
             @Valid @RequestBody OrderRequest orderRequest
     ) {
-        return ApiResponse.success(makeOrderService.execute(orderRequest));
+        return ResponseEntity.ok(makeOrderService.execute(orderRequest));
     }
 
     @GetMapping("/users/{userId}/orders")
-    public ApiResponse<List<UserOrderResponse>> getUserOrders(
+    public ResponseEntity<List<UserOrderResponse>> getUserOrders(
             @PathVariable("userId") Long userId
     ) {
-        return ApiResponse.success(userOrderService.getUserOrders(userId));
+        return ResponseEntity.ok(userOrderService.getUserOrders(userId));
     }
 
     @GetMapping("/users/{userId}/orders/{orderId}")
-    public ApiResponse<OrderResponse> getUserOrder(
+    public ResponseEntity<OrderResponse> getUserOrder(
             @PathVariable("userId") Long userId,
             @PathVariable("orderId") Long orderId
     ) {
-        return ApiResponse.success(userOrderService.getUserOrder(userId, orderId));
+        return ResponseEntity.ok(userOrderService.getUserOrder(userId, orderId));
     }
 
     @PostMapping("/orders/{orderId}/payments")
-    public ApiResponse<PaymentResponse> makePayment (
+    public ResponseEntity<PaymentResponse> makePayment (
             @PathVariable("orderId") Long orderId
     ) {
-        return ApiResponse.success(makePaymentService.execute(orderId));
+        return ResponseEntity.ok(makePaymentService.execute(orderId));
     }
 }

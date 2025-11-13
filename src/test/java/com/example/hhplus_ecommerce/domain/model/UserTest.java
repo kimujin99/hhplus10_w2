@@ -1,11 +1,12 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 class UserTest {
 
@@ -13,7 +14,7 @@ class UserTest {
     @DisplayName("포인트 충전 성공 - 1000원 단위")
     void chargePoint_Success() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Long chargeAmount = 5000L;
 
         // when
@@ -27,39 +28,41 @@ class UserTest {
     @DisplayName("포인트 충전 실패 - 0원 이하")
     void chargePoint_Fail_ZeroOrNegative() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
 
         // when & then
-        assertThatThrownBy(() -> user.chargePoint(0L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CHARGE_AMOUNT);
-
-        assertThatThrownBy(() -> user.chargePoint(-1000L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CHARGE_AMOUNT);
+        assertAll(
+                () -> assertThatThrownBy(() -> user.chargePoint(0L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT),
+                () -> assertThatThrownBy(() -> user.chargePoint(-1000L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT)
+        );
     }
 
     @Test
     @DisplayName("포인트 충전 실패 - 1000원 단위가 아님")
     void chargePoint_Fail_NotMultipleOf1000() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
 
         // when & then
-        assertThatThrownBy(() -> user.chargePoint(500L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CHARGE_AMOUNT);
-
-        assertThatThrownBy(() -> user.chargePoint(1500L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CHARGE_AMOUNT);
+        assertAll(
+                () -> assertThatThrownBy(() -> user.chargePoint(500L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT),
+                () -> assertThatThrownBy(() -> user.chargePoint(1500L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT)
+        );
     }
 
     @Test
     @DisplayName("포인트 사용 성공")
     void usePoint_Success() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(10000L);
 
         // when
@@ -73,37 +76,38 @@ class UserTest {
     @DisplayName("포인트 사용 실패 - 잔액 부족")
     void usePoint_Fail_InsufficientPoint() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(5000L);
 
         // when & then
         assertThatThrownBy(() -> user.usePoint(6000L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INSUFFICIENT_POINT);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INSUFFICIENT_POINT);
     }
 
     @Test
     @DisplayName("포인트 사용 실패 - 0원 이하")
     void usePoint_Fail_ZeroOrNegative() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
         user.chargePoint(5000L);
 
         // when & then
-        assertThatThrownBy(() -> user.usePoint(0L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_POINT_AMOUNT);
-
-        assertThatThrownBy(() -> user.usePoint(-1000L))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_POINT_AMOUNT);
+        assertAll(
+                () -> assertThatThrownBy(() -> user.usePoint(0L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_POINT_AMOUNT),
+                () -> assertThatThrownBy(() -> user.usePoint(-1000L))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_POINT_AMOUNT)
+        );
     }
 
     @Test
     @DisplayName("포인트 충전 및 사용 복합 시나리오")
     void complexScenario() {
         // given
-        User user = new User();
+        User user = User.builder().point(0L).build();
 
         // when & then
         user.chargePoint(10000L);

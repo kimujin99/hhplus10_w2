@@ -1,8 +1,10 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.UserService;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -47,9 +49,8 @@ class UserControllerTest {
         mockMvc.perform(get("/api/v1/users/{userId}/points", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.userId").value(userId))
-                .andExpect(jsonPath("$.data.point").value(50000));
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.point").value(50000));
     }
 
     @Test
@@ -58,13 +59,14 @@ class UserControllerTest {
         // given
         Long userId = 999L;
         when(userService.getPoint(anyLong()))
-                .thenThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .thenThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         mockMvc.perform(get("/api/v1/users/{userId}/points", userId))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -82,16 +84,15 @@ class UserControllerTest {
         mockMvc.perform(get("/api/v1/users/{userId}/points/history", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].userId").value(userId))
-                .andExpect(jsonPath("$.data[0].transactionType").value("CHARGE"))
-                .andExpect(jsonPath("$.data[0].amount").value(50000))
-                .andExpect(jsonPath("$.data[0].balanceAfter").value(50000))
-                .andExpect(jsonPath("$.data[1].transactionType").value("USE"))
-                .andExpect(jsonPath("$.data[1].amount").value(30000))
-                .andExpect(jsonPath("$.data[1].balanceAfter").value(20000));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].userId").value(userId))
+                .andExpect(jsonPath("$[0].transactionType").value("CHARGE"))
+                .andExpect(jsonPath("$[0].amount").value(50000))
+                .andExpect(jsonPath("$[0].balanceAfter").value(50000))
+                .andExpect(jsonPath("$[1].transactionType").value("USE"))
+                .andExpect(jsonPath("$[1].amount").value(30000))
+                .andExpect(jsonPath("$[1].balanceAfter").value(20000));
     }
 
     @Test
@@ -105,9 +106,8 @@ class UserControllerTest {
         mockMvc.perform(get("/api/v1/users/{userId}/points/history", userId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(0));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
@@ -125,9 +125,8 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.userId").value(userId))
-                .andExpect(jsonPath("$.data.point").value(150000));
+                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.point").value(150000));
     }
 
     @Test
@@ -137,15 +136,16 @@ class UserControllerTest {
         Long userId = 999L;
         ChargePointRequest request = new ChargePointRequest(100000L);
         when(userService.chargePoint(anyLong(), any(ChargePointRequest.class)))
-                .thenThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .thenThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         mockMvc.perform(post("/api/v1/users/{userId}/points/charge", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -155,7 +155,7 @@ class UserControllerTest {
         Long userId = 1L;
         ChargePointRequest request = new ChargePointRequest(-10000L);
         when(userService.chargePoint(anyLong(), any(ChargePointRequest.class)))
-                .thenThrow(new BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT));
+                .thenThrow(new BadRequestException(PointErrorCode.INVALID_CHARGE_AMOUNT));
 
         // when & then
         mockMvc.perform(post("/api/v1/users/{userId}/points/charge", userId)
@@ -163,6 +163,7 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 }

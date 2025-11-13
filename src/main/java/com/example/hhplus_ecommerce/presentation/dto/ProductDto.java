@@ -1,11 +1,9 @@
 package com.example.hhplus_ecommerce.presentation.dto;
 
 import com.example.hhplus_ecommerce.domain.model.Product;
-import lombok.Getter;
 
 import java.util.List;
 
-@Getter
 public class ProductDto {
 
     public record ProductResponse(
@@ -13,8 +11,7 @@ public class ProductDto {
             String productName,
             String description,
             Long price,
-            Integer stockQuantity,
-            Integer viewCount
+            Integer stockQuantity
     ){
         public static ProductResponse from(Product product) {
             return new ProductResponse(
@@ -22,8 +19,7 @@ public class ProductDto {
                     product.getProductName(),
                     product.getDescription(),
                     product.getPrice(),
-                    product.getStockQuantity(),
-                    product.getViewCount()
+                    product.getStockQuantity()
             );
         }
 

@@ -1,17 +1,19 @@
 package com.example.hhplus_ecommerce.application.service;
 
 import com.example.hhplus_ecommerce.domain.model.Product;
-import com.example.hhplus_ecommerce.domain.repository.ProductRepository;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
-import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;
+import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.presentation.dto.ProductDto.PopularProductResponse;
+import com.example.hhplus_ecommerce.presentation.dto.ProductDto.ProductResponse;
+import com.example.hhplus_ecommerce.presentation.dto.ProductDto.ProductStockResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -21,16 +23,15 @@ public class ProductService {
         return ProductResponse.fromList(products);
     }
 
+    @Transactional
     public ProductResponse getProduct(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-        product.incrementViewCount();
-        return ProductResponse.from(productRepository.save(product));
+        Product product = productRepository.findByIdOrThrow(productId);
+        productRepository.incrementViewCount(productId);
+        return ProductResponse.from(product);
     }
 
     public ProductStockResponse getProductStock(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        Product product = productRepository.findByIdOrThrow(productId);
         return ProductStockResponse.from(product);
     }
 

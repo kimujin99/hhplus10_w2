@@ -1,14 +1,21 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
-import lombok.Builder;
-import lombok.Getter;
+import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CommonErrorCode;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Getter
-@Builder
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class CartItem extends BaseEntity {
+    @Column(nullable = false)
     private Long userId;
+    @Column(nullable = false)
     private Long productId;
     private String productName;
     private Long price;
@@ -16,7 +23,7 @@ public class CartItem extends BaseEntity {
 
     public void updateQuantity(Integer newQuantity) {
         if(newQuantity <= 0) {
-            throw new BusinessException(ErrorCode.INVALID_QUANTITY);
+            throw new BadRequestException(CommonErrorCode.INVALID_QUANTITY);
         }
         this.quantity = newQuantity;
     }

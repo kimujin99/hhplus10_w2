@@ -1,11 +1,12 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CommonErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 class CartItemTest {
 
@@ -41,12 +42,13 @@ class CartItemTest {
                 .build();
 
         // when & then
-        assertThatThrownBy(() -> cartItem.updateQuantity(0))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_QUANTITY);
-
-        assertThatThrownBy(() -> cartItem.updateQuantity(-1))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_QUANTITY);
+        assertAll(
+                () -> assertThatThrownBy(() -> cartItem.updateQuantity(0))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", CommonErrorCode.INVALID_QUANTITY),
+                () -> assertThatThrownBy(() -> cartItem.updateQuantity(-1))
+                        .isInstanceOf(BaseException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", CommonErrorCode.INVALID_QUANTITY)
+        );
     }
 }

@@ -3,11 +3,9 @@ package com.example.hhplus_ecommerce.presentation.dto;
 import com.example.hhplus_ecommerce.domain.model.CartItem;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
 
 import java.util.List;
 
-@Getter
 public class CartDto {
 
     public record CartItemResponse(

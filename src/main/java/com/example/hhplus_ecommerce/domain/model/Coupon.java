@@ -1,22 +1,33 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
-import lombok.Builder;
-import lombok.Getter;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Version;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Builder
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class Coupon extends BaseEntity {
     private String name;
+    @Enumerated(EnumType.STRING)
     private DiscountType discountType;
     private Long discountValue;
     private Integer totalQuantity;
     private Integer issuedQuantity;
     private LocalDateTime validFrom;
     private LocalDateTime validUntil;
+
+    @Version
+    protected Long version;
 
     public Integer getRemainingQuantity() {
         return this.totalQuantity - this.issuedQuantity;
@@ -25,10 +36,10 @@ public class Coupon extends BaseEntity {
     public void issue() {
         LocalDateTime now = LocalDateTime.now();
         if(now.isAfter(validUntil)) {
-            throw new BusinessException(ErrorCode.COUPON_EXPIRED, "쿠폰 발급 기간이 종료되었습니다.");
+            throw new ConflictException(CouponErrorCode.COUPON_EXPIRED, "쿠폰 발급 기간이 종료되었습니다.");
         }
         if(getRemainingQuantity() <= 0) {
-            throw new BusinessException(ErrorCode.COUPON_SOLD_OUT);
+            throw new ConflictException(CouponErrorCode.COUPON_SOLD_OUT);
         }
         this.issuedQuantity++;
     }

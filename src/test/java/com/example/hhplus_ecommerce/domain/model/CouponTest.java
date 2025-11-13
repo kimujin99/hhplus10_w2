@@ -1,13 +1,14 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 class CouponTest {
 
@@ -29,8 +30,10 @@ class CouponTest {
         coupon.issue();
 
         // then
-        assertThat(coupon.getIssuedQuantity()).isEqualTo(1);
-        assertThat(coupon.getRemainingQuantity()).isEqualTo(99);
+        assertAll(
+                () -> assertThat(coupon.getIssuedQuantity()).isEqualTo(1),
+                () -> assertThat(coupon.getRemainingQuantity()).isEqualTo(99)
+        );
     }
 
     @Test
@@ -49,8 +52,8 @@ class CouponTest {
 
         // when & then
         assertThatThrownBy(coupon::issue)
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_SOLD_OUT);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_SOLD_OUT);
     }
 
     @Test
@@ -69,8 +72,8 @@ class CouponTest {
 
         // when & then
         assertThatThrownBy(coupon::issue)
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_EXPIRED);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_EXPIRED);
     }
 
     @Test

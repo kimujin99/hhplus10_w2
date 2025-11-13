@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -58,8 +58,8 @@ class ProductTest {
 
         // when & then
         assertThatThrownBy(() -> product.subStockQuantity(10))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INSUFFICIENT_STOCK);
+                .isInstanceOf(BaseException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.INSUFFICIENT_STOCK);
     }
 
     @Test
@@ -79,29 +79,6 @@ class ProductTest {
 
         // then
         assertThat(product.getPurchaseCount()).isEqualTo(15);
-    }
-
-    @Test
-    @DisplayName("재고 인기도 조회 검증")
-    void getPopularityScore() {
-        // given
-        Product product = Product.builder()
-                .productName("테스트 상품")
-                .description("테스트 설명")
-                .price(10000L)
-                .originalStockQuantity(20)
-                .stockQuantity(20)
-                .build();
-
-        // when
-        product.subStockQuantity(15);
-        product.incrementViewCount();
-        product.incrementViewCount();
-        product.incrementViewCount();
-
-        // then
-        double expectedScore = 3 + (15.0 / 20) * 100 * 2;
-        assertThat(product.getPopularityScore()).isEqualTo((int)expectedScore);
     }
 
     @Test
