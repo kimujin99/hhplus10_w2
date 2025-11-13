@@ -10,21 +10,15 @@ import com.example.hhplus_ecommerce.presentation.dto.CartDto.*;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
+import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 
@@ -32,25 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
 @Transactional
-@Testcontainers
-class EcommerceIntegrationTest {
-
-    @Container
-    static MySQLContainer<?> container = new MySQLContainer<>("mysql:8.0.33")
-            .withDatabaseName("test")
-            .withUsername("test")
-            .withPassword("test")
-            .withInitScript("schema.sql");
-
-    @DynamicPropertySource
-    static void setDatasourceProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", container::getJdbcUrl);
-        registry.add("spring.datasource.username", container::getUsername);
-        registry.add("spring.datasource.password", container::getPassword);
-    }
+class EcommerceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

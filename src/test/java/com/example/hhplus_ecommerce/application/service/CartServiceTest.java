@@ -7,6 +7,8 @@ import com.example.hhplus_ecommerce.infrastructure.repository.CartItemRepository
 import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
@@ -65,7 +67,7 @@ class CartServiceTest {
                 .quantity(1)
                 .build();
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(cartItemRepository.findByUserId(userId)).willReturn(List.of(cartItem1, cartItem2));
 
         // when
@@ -78,7 +80,7 @@ class CartServiceTest {
                 () -> assertThat(result.get(1).productName()).isEqualTo("상품2")
         );
 
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(cartItemRepository).findByUserId(userId);
     }
 
@@ -87,13 +89,14 @@ class CartServiceTest {
     void getUserCart_Fail_UserNotFound() {
         // given
         Long userId = 999L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> cartService.getUserCart(userId))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(cartItemRepository, never()).findByUserId(any());
     }
 
@@ -119,8 +122,8 @@ class CartServiceTest {
                 .quantity(5)
                 .build();
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(productRepository.findByIdOrThrow(productId)).willReturn(product);
         given(cartItemRepository.findByUserIdAndProductId(userId, productId)).willReturn(Optional.empty());
         given(cartItemRepository.save(any(CartItem.class))).willReturn(newCartItem);
 
@@ -134,8 +137,8 @@ class CartServiceTest {
                 () -> assertThat(result.quantity()).isEqualTo(5)
         );
 
-        verify(userRepository).findById(userId);
-        verify(productRepository).findById(productId);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(productRepository).findByIdOrThrow(productId);
         verify(cartItemRepository).findByUserIdAndProductId(userId, productId);
         verify(cartItemRepository).save(any(CartItem.class));
     }
@@ -162,8 +165,8 @@ class CartServiceTest {
                 .build();
         AddCartItemRequest request = new AddCartItemRequest(productId, 3);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(productRepository.findByIdOrThrow(productId)).willReturn(product);
         given(cartItemRepository.findByUserIdAndProductId(userId, productId)).willReturn(Optional.of(existingCartItem));
         given(cartItemRepository.save(any(CartItem.class))).willReturn(existingCartItem);
 
@@ -176,8 +179,8 @@ class CartServiceTest {
                 () -> assertThat(result.quantity()).isEqualTo(8)
         );
 
-        verify(userRepository).findById(userId);
-        verify(productRepository).findById(productId);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(productRepository).findByIdOrThrow(productId);
         verify(cartItemRepository).findByUserIdAndProductId(userId, productId);
         verify(cartItemRepository).save(existingCartItem);
     }
@@ -197,16 +200,16 @@ class CartServiceTest {
                 .build();
         AddCartItemRequest request = new AddCartItemRequest(productId, 5);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(productRepository.findByIdOrThrow(productId)).willReturn(product);
         given(cartItemRepository.findByUserIdAndProductId(userId, productId)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> cartService.addCartItem(userId, request))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.INSUFFICIENT_STOCK);
-        verify(userRepository).findById(userId);
-        verify(productRepository).findById(productId);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(productRepository).findByIdOrThrow(productId);
         verify(cartItemRepository, never()).save(any());
     }
 
@@ -216,14 +219,15 @@ class CartServiceTest {
         // given
         Long userId = 999L;
         AddCartItemRequest request = new AddCartItemRequest(1L, 5);
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> cartService.addCartItem(userId, request))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
-        verify(productRepository, never()).findById(any());
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(productRepository, never()).findByIdOrThrow(any());
         verify(cartItemRepository, never()).save(any());
     }
 
@@ -236,15 +240,16 @@ class CartServiceTest {
         User user = User.builder().point(0L).build();
         AddCartItemRequest request = new AddCartItemRequest(productId, 5);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(productRepository.findById(productId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(productRepository.findByIdOrThrow(productId))
+                .willThrow(new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> cartService.addCartItem(userId, request))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.PRODUCT_NOT_FOUND);
-        verify(userRepository).findById(userId);
-        verify(productRepository).findById(productId);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(productRepository).findByIdOrThrow(productId);
         verify(cartItemRepository, never()).save(any());
     }
 
@@ -261,14 +266,14 @@ class CartServiceTest {
                 .quantity(5)
                 .build();
 
-        given(cartItemRepository.findById(cartItemId)).willReturn(Optional.of(cartItem));
+        given(cartItemRepository.findByIdOrThrow(cartItemId)).willReturn(cartItem);
         doNothing().when(cartItemRepository).deleteById(cartItemId);
 
         // when
         cartService.deleteCartItem(cartItemId);
 
         // then
-        verify(cartItemRepository).findById(cartItemId);
+        verify(cartItemRepository).findByIdOrThrow(cartItemId);
         verify(cartItemRepository).deleteById(cartItemId);
     }
 
@@ -277,13 +282,14 @@ class CartServiceTest {
     void deleteCartItem_Fail_NotFound() {
         // given
         Long cartItemId = 999L;
-        given(cartItemRepository.findById(cartItemId)).willReturn(Optional.empty());
+        given(cartItemRepository.findByIdOrThrow(cartItemId))
+                .willThrow(new NotFoundException(CartErrorCode.CART_ITEM_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> cartService.deleteCartItem(cartItemId))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", CartErrorCode.CART_ITEM_NOT_FOUND);
-        verify(cartItemRepository).findById(cartItemId);
+        verify(cartItemRepository).findByIdOrThrow(cartItemId);
         verify(cartItemRepository, never()).deleteById((Long) any());
     }
 }

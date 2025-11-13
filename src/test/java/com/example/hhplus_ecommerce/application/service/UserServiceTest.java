@@ -5,6 +5,8 @@ import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.infrastructure.repository.PointHistoryRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
@@ -44,7 +46,7 @@ class UserServiceTest {
         User user = User.builder().point(0L).build();
         user.chargePoint(10000L);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
 
         // when
         PointResponse result = userService.getPoint(userId);
@@ -55,7 +57,7 @@ class UserServiceTest {
                 () -> assertThat(result.point()).isEqualTo(10000L)
         );
 
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
     }
 
     @Test
@@ -63,13 +65,14 @@ class UserServiceTest {
     void getPoint_Fail_UserNotFound() {
         // given
         Long userId = 999L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> userService.getPoint(userId))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
     }
 
     @Test
@@ -91,7 +94,7 @@ class UserServiceTest {
                 .balanceAfter(7000L)
                 .build();
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(pointHistoryRepository.findByUserId(userId)).willReturn(List.of(history1, history2));
 
         // when
@@ -99,7 +102,7 @@ class UserServiceTest {
 
         // then
         assertThat(result).hasSize(2);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(pointHistoryRepository).findByUserId(userId);
     }
 
@@ -108,13 +111,14 @@ class UserServiceTest {
     void getPointHistory_Fail_UserNotFound() {
         // given
         Long userId = 999L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> userService.getPointHistory(userId))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(pointHistoryRepository, never()).findByUserId(any());
     }
 
@@ -126,7 +130,7 @@ class UserServiceTest {
         User user = User.builder().point(0L).build();
         ChargePointRequest request = new ChargePointRequest(5000L);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(userRepository.save(any(User.class))).willReturn(user);
         given(pointHistoryRepository.save(any(PointHistory.class))).willReturn(null);
 
@@ -139,7 +143,7 @@ class UserServiceTest {
                 () -> assertThat(result.point()).isEqualTo(5000L)
         );
 
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(userRepository).save(user);
         verify(pointHistoryRepository).save(any(PointHistory.class));
     }
@@ -150,13 +154,14 @@ class UserServiceTest {
         // given
         Long userId = 999L;
         ChargePointRequest request = new ChargePointRequest(5000L);
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> userService.chargePoint(userId, request))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(userRepository, never()).save(any());
         verify(pointHistoryRepository, never()).save(any());
     }
@@ -169,13 +174,13 @@ class UserServiceTest {
         User user = User.builder().point(0L).build();
         ChargePointRequest request = new ChargePointRequest(500L); // 1000원 단위가 아님
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
 
         // when & then
         assertThatThrownBy(() -> userService.chargePoint(userId, request))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(userRepository, never()).save(any());
         verify(pointHistoryRepository, never()).save(any());
     }

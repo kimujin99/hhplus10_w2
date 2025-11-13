@@ -3,6 +3,8 @@ package com.example.hhplus_ecommerce.application.service;
 import com.example.hhplus_ecommerce.domain.model.*;
 import com.example.hhplus_ecommerce.infrastructure.repository.*;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
@@ -67,10 +69,19 @@ class MakePaymentServiceTest {
                 .price(10000L)
                 .quantity(2)
                 .build();
+        Product product = Product.builder()
+                .productName("테스트 상품")
+                .description("설명")
+                .price(10000L)
+                .originalStockQuantity(100)
+                .stockQuantity(100)
+                .build();
 
-        given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(orderRepository.findByIdOrThrow(orderId)).willReturn(order);
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(orderItemRepository.findByOrderId(orderId)).willReturn(List.of(orderItem));
+        given(productRepository.findByIdOrThrow(1L)).willReturn(product);
+        given(productRepository.save(any(Product.class))).willReturn(product);
         given(userRepository.save(any(User.class))).willReturn(user);
         given(orderRepository.save(any(Order.class))).willReturn(order);
 
@@ -83,9 +94,11 @@ class MakePaymentServiceTest {
                 () -> assertThat(user.getPoint()).isEqualTo(30000L)
         );
 
-        verify(orderRepository).findById(orderId);
-        verify(userRepository).findById(userId);
+        verify(orderRepository).findByIdOrThrow(orderId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(orderItemRepository).findByOrderId(orderId);
+        verify(productRepository).findByIdOrThrow(1L);
+        verify(productRepository).save(product);
         verify(userRepository).save(user);
         verify(orderRepository).save(order);
     }
@@ -95,14 +108,15 @@ class MakePaymentServiceTest {
     void execute_Fail_OrderNotFound() {
         // given
         Long orderId = 999L;
-        given(orderRepository.findById(orderId)).willReturn(Optional.empty());
+        given(orderRepository.findByIdOrThrow(orderId))
+                .willThrow(new NotFoundException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> makePaymentService.execute(orderId))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", OrderErrorCode.ORDER_NOT_FOUND);
-        verify(orderRepository).findById(orderId);
-        verify(userRepository, never()).findById(any());
+        verify(orderRepository).findByIdOrThrow(orderId);
+        verify(userRepository, never()).findByIdOrThrow(any());
     }
 
     @Test
@@ -119,15 +133,16 @@ class MakePaymentServiceTest {
                 .deliveryAddress("서울시")
                 .build();
 
-        given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(orderRepository.findByIdOrThrow(orderId)).willReturn(order);
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> makePaymentService.execute(orderId))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(orderRepository).findById(orderId);
-        verify(userRepository).findById(userId);
+        verify(orderRepository).findByIdOrThrow(orderId);
+        verify(userRepository).findByIdOrThrow(userId);
     }
 
     @Test
@@ -153,17 +168,26 @@ class MakePaymentServiceTest {
                 .price(10000L)
                 .quantity(2)
                 .build();
+        Product product = Product.builder()
+                .productName("테스트 상품")
+                .description("설명")
+                .price(10000L)
+                .originalStockQuantity(100)
+                .stockQuantity(100)
+                .build();
 
-        given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(orderRepository.findByIdOrThrow(orderId)).willReturn(order);
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(orderItemRepository.findByOrderId(orderId)).willReturn(List.of(orderItem));
+        given(productRepository.findByIdOrThrow(1L)).willReturn(product);
+        given(productRepository.save(any(Product.class))).willReturn(product);
 
         // when & then
         assertThatThrownBy(() -> makePaymentService.execute(orderId))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INSUFFICIENT_POINT);
-        verify(orderRepository).findById(orderId);
-        verify(userRepository).findById(userId);
+        verify(orderRepository).findByIdOrThrow(orderId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(orderItemRepository).findByOrderId(orderId);
     }
 }

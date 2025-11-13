@@ -33,9 +33,9 @@ class ProductControllerTest {
     void getProducts_Success() throws Exception {
         // given
         List<ProductResponse> products = List.of(
-                new ProductResponse(1L, "맥북 프로", "애플 맥북 프로", 2000000L, 10, 100),
-                new ProductResponse(2L, "아이패드", "애플 아이패드", 1000000L, 20, 200),
-                new ProductResponse(3L, "에어팟", "애플 에어팟", 300000L, 50, 300)
+                new ProductResponse(1L, "맥북 프로", "애플 맥북 프로", 2000000L, 10),
+                new ProductResponse(2L, "아이패드", "애플 아이패드", 1000000L, 20),
+                new ProductResponse(3L, "에어팟", "애플 에어팟", 300000L, 50)
         );
         when(productService.getProducts()).thenReturn(products);
 
@@ -48,8 +48,7 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$[0].productId").value(1))
                 .andExpect(jsonPath("$[0].productName").value("맥북 프로"))
                 .andExpect(jsonPath("$[0].price").value(2000000))
-                .andExpect(jsonPath("$[0].stockQuantity").value(10))
-                .andExpect(jsonPath("$[0].viewCount").value(100));
+                .andExpect(jsonPath("$[0].stockQuantity").value(10));
     }
 
     @Test
@@ -71,7 +70,7 @@ class ProductControllerTest {
     void getProduct_Success() throws Exception {
         // given
         Long productId = 1L;
-        ProductResponse response = new ProductResponse(productId, "맥북 프로", "애플 맥북 프로", 2000000L, 10, 100);
+        ProductResponse response = new ProductResponse(productId, "맥북 프로", "애플 맥북 프로", 2000000L, 10);
         when(productService.getProduct(anyLong())).thenReturn(response);
 
         // when & then
@@ -82,8 +81,7 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$.productName").value("맥북 프로"))
                 .andExpect(jsonPath("$.description").value("애플 맥북 프로"))
                 .andExpect(jsonPath("$.price").value(2000000))
-                .andExpect(jsonPath("$.stockQuantity").value(10))
-                .andExpect(jsonPath("$.viewCount").value(100));
+                .andExpect(jsonPath("$.stockQuantity").value(10));
     }
 
     @Test

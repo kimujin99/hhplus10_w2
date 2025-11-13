@@ -9,6 +9,7 @@ import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -88,6 +89,7 @@ class CouponServiceTest {
         Long couponId = 1L;
         User user = User.builder().point(0L).build();
         Coupon coupon = Coupon.builder()
+                .id(couponId)
                 .name("테스트 쿠폰")
                 .discountType(Coupon.DiscountType.PERCENTAGE)
                 .discountValue(10L)
@@ -98,13 +100,13 @@ class CouponServiceTest {
                 .build();
         UserCoupon userCoupon = UserCoupon.builder()
                 .userId(userId)
-                .couponId(couponId)
+                .coupon(coupon)
                 .build();
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(couponRepository.findById(couponId)).willReturn(Optional.of(coupon));
-        given(userCouponRepository.findByUserIdAndCouponId(userId, couponId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(couponRepository.findByIdOrThrow(couponId)).willReturn(coupon);
+        given(userCouponRepository.findByUserIdAndCoupon_Id(userId, couponId)).willReturn(Optional.empty());
         given(couponRepository.save(any(Coupon.class))).willReturn(coupon);
         given(userCouponRepository.save(any(UserCoupon.class))).willReturn(userCoupon);
 
@@ -113,9 +115,9 @@ class CouponServiceTest {
 
         // then
         assertThat(result).isNotNull();
-        verify(userRepository).findById(userId);
-        verify(couponRepository).findById(couponId);
-        verify(userCouponRepository).findByUserIdAndCouponId(userId, couponId);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(couponRepository).findByIdOrThrow(couponId);
+        verify(userCouponRepository).findByUserIdAndCoupon_Id(userId, couponId);
         verify(couponRepository).save(coupon);
         verify(userCouponRepository).save(any(UserCoupon.class));
     }
@@ -126,13 +128,13 @@ class CouponServiceTest {
         // given
         Long userId = 999L;
         IssueCouponRequest request = new IssueCouponRequest(1L);
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId)).willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> couponService.issueCoupon(userId, request))
                 .isInstanceOf(BaseException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(couponRepository, never()).findById(any());
         verify(userCouponRepository, never()).save(any());
     }
@@ -146,15 +148,15 @@ class CouponServiceTest {
         User user = User.builder().point(0L).build();
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(couponRepository.findById(couponId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(couponRepository.findByIdOrThrow(couponId)).willThrow(new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> couponService.issueCoupon(userId, request))
                 .isInstanceOf(BaseException.class)
                 .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_NOT_FOUND);
-        verify(userRepository).findById(userId);
-        verify(couponRepository).findById(couponId);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(couponRepository).findByIdOrThrow(couponId);
         verify(userCouponRepository, never()).save(any());
     }
 
@@ -166,6 +168,7 @@ class CouponServiceTest {
         Long couponId = 1L;
         User user = User.builder().point(0L).build();
         Coupon coupon = Coupon.builder()
+                .id(couponId)
                 .name("테스트 쿠폰")
                 .discountType(Coupon.DiscountType.PERCENTAGE)
                 .discountValue(10L)
@@ -176,21 +179,21 @@ class CouponServiceTest {
                 .build();
         UserCoupon existingUserCoupon = UserCoupon.builder()
                 .userId(userId)
-                .couponId(couponId)
+                .coupon(coupon)
                 .build();
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(couponRepository.findById(couponId)).willReturn(Optional.of(coupon));
-        given(userCouponRepository.findByUserIdAndCouponId(userId, couponId)).willReturn(Optional.of(existingUserCoupon));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(couponRepository.findByIdOrThrow(couponId)).willReturn(coupon);
+        given(userCouponRepository.findByUserIdAndCoupon_Id(userId, couponId)).willReturn(Optional.of(existingUserCoupon));
 
         // when & then
         assertThatThrownBy(() -> couponService.issueCoupon(userId, request))
                 .isInstanceOf(BaseException.class)
                 .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_ALREADY_ISSUED);
-        verify(userRepository).findById(userId);
-        verify(couponRepository).findById(couponId);
-        verify(userCouponRepository).findByUserIdAndCouponId(userId, couponId);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(couponRepository).findByIdOrThrow(couponId);
+        verify(userCouponRepository).findByUserIdAndCoupon_Id(userId, couponId);
         verify(couponRepository, never()).save(any());
         verify(userCouponRepository, never()).save(any());
     }
@@ -202,14 +205,8 @@ class CouponServiceTest {
         Long userId = 1L;
         Long couponId = 1L;
         User user = User.builder().point(0L).build();
-        UserCoupon userCoupon = UserCoupon.builder()
-                .id(1L)
-                .userId(userId)
-                .couponId(couponId)
-                .build();
-
         Coupon coupon = Coupon.builder()
-                .id(1L)
+                .id(couponId)
                 .name("테스트 쿠폰")
                 .discountType(Coupon.DiscountType.PERCENTAGE)
                 .discountValue(10L)
@@ -218,19 +215,22 @@ class CouponServiceTest {
                 .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(7))
                 .build();
+        UserCoupon userCoupon = UserCoupon.builder()
+                .id(1L)
+                .userId(userId)
+                .coupon(coupon)
+                .build();
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(userCouponRepository.findByUserId(userId)).willReturn(List.of(userCoupon));
-        given(couponRepository.findById(couponId)).willReturn(Optional.of(coupon));
 
         // when
         List<UserCouponResponse> result = couponService.getUserCoupons(userId);
 
         // then
         assertThat(result).hasSize(1);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(userCouponRepository).findByUserId(userId);
-        verify(couponRepository).findById(couponId);
     }
 
     @Test
@@ -238,13 +238,13 @@ class CouponServiceTest {
     void getUserCoupons_Fail_UserNotFound() {
         // given
         Long userId = 999L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId)).willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> couponService.getUserCoupons(userId))
                 .isInstanceOf(BaseException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(userCouponRepository, never()).findByUserId(any());
     }
 }

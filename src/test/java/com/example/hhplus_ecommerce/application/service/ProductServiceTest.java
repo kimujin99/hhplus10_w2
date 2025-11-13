@@ -3,6 +3,7 @@ package com.example.hhplus_ecommerce.application.service;
 import com.example.hhplus_ecommerce.domain.model.Product;
 import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;
 import org.junit.jupiter.api.DisplayName;
@@ -74,8 +75,8 @@ class ProductServiceTest {
                 .stockQuantity(10)
                 .build();
 
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
-        given(productRepository.save(any(Product.class))).willReturn(product);
+        given(productRepository.findByIdOrThrow(productId)).willReturn(product);
+        doNothing().when(productRepository).incrementViewCount(productId);
 
         // when
         ProductResponse result = productService.getProduct(productId);
@@ -83,12 +84,11 @@ class ProductServiceTest {
         // then
         assertAll(
                 () -> assertThat(result).isNotNull(),
-                () -> assertThat(result.productName()).isEqualTo("테스트 상품"),
-                () -> assertThat(product.getViewCount()).isEqualTo(1)
+                () -> assertThat(result.productName()).isEqualTo("테스트 상품")
         );
 
-        verify(productRepository).findById(productId);
-        verify(productRepository).save(product);
+        verify(productRepository).findByIdOrThrow(productId);
+        verify(productRepository).incrementViewCount(productId);
     }
 
     @Test
@@ -96,14 +96,15 @@ class ProductServiceTest {
     void getProduct_Fail_ProductNotFound() {
         // given
         Long productId = 999L;
-        given(productRepository.findById(productId)).willReturn(Optional.empty());
+        given(productRepository.findByIdOrThrow(productId))
+                .willThrow(new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> productService.getProduct(productId))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.PRODUCT_NOT_FOUND);
-        verify(productRepository).findById(productId);
-        verify(productRepository, never()).save(any());
+        verify(productRepository).findByIdOrThrow(productId);
+        verify(productRepository, never()).incrementViewCount(any());
     }
 
     @Test
@@ -118,7 +119,7 @@ class ProductServiceTest {
                 .stockQuantity(50)
                 .build();
 
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(productRepository.findByIdOrThrow(productId)).willReturn(product);
 
         // when
         ProductStockResponse result = productService.getProductStock(productId);
@@ -129,7 +130,7 @@ class ProductServiceTest {
                 () -> assertThat(result.stockQuantity()).isEqualTo(50)
         );
 
-        verify(productRepository).findById(productId);
+        verify(productRepository).findByIdOrThrow(productId);
     }
 
     @Test
@@ -137,13 +138,14 @@ class ProductServiceTest {
     void getProductStock_Fail_ProductNotFound() {
         // given
         Long productId = 999L;
-        given(productRepository.findById(productId)).willReturn(Optional.empty());
+        given(productRepository.findByIdOrThrow(productId))
+                .willThrow(new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> productService.getProductStock(productId))
-                .isInstanceOf(BaseException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ProductErrorCode.PRODUCT_NOT_FOUND);
-        verify(productRepository).findById(productId);
+        verify(productRepository).findByIdOrThrow(productId);
     }
 
     @Test

@@ -36,7 +36,8 @@ CREATE TABLE `coupon` (
                           `valid_from` DATETIME,
                           `valid_until` DATETIME,
                           `created_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
-                          `updated_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)
+                          `updated_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+                          `version` BIGINT DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ===========================
@@ -72,6 +73,7 @@ CREATE TABLE `cart_item` (
 CREATE TABLE `order_table` (
                                `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
                                `user_id` BIGINT NOT NULL,
+                               `user_coupon_id` BIGINT,
                                `total_amount` BIGINT,
                                `discount_amount` BIGINT,
                                `status` VARCHAR(50) NOT NULL DEFAULT 'PENDING',
