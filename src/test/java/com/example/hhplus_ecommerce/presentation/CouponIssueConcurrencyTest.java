@@ -94,7 +94,7 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
             executorService.submit(() -> {
                 try {
                     IssueCouponRequest request = new IssueCouponRequest(couponId);
-                    couponService.issueCouponWithRetry(userId, request);
+                    couponService.issueCoupon(userId, request);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();
@@ -168,7 +168,7 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
             executorService.submit(() -> {
                 try {
                     IssueCouponRequest request = new IssueCouponRequest(couponId);
-                    couponService.issueCouponWithRetry(userId, request);
+                    couponService.issueCoupon(userId, request);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();
@@ -233,7 +233,7 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
                     startLatch.await();
 
                     IssueCouponRequest request = new IssueCouponRequest(smallCoupon.getId());
-                    couponService.issueCouponWithRetry(userId, request);
+                    couponService.issueCoupon(userId, request);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     exceptions.add(e);
@@ -285,7 +285,7 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
             executorService.submit(() -> {
                 try {
                     IssueCouponRequest request = new IssueCouponRequest(couponId);
-                    couponService.issueCouponWithRetry(user.getId(), request);
+                    couponService.issueCoupon(user.getId(), request);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();

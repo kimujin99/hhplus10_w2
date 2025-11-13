@@ -7,11 +7,16 @@ import com.example.hhplus_ecommerce.infrastructure.repository.UserCouponReposito
 import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
-import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
+import com.example.hhplus_ecommerce.presentation.dto.CouponDto.CouponResponse;
+import com.example.hhplus_ecommerce.presentation.dto.CouponDto.IssueCouponRequest;
+import com.example.hhplus_ecommerce.presentation.dto.CouponDto.UserCouponResponse;
 import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,23 +25,13 @@ import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
+@EnableRetry
+@RequiredArgsConstructor
 public class CouponService {
 
     private final CouponRepository couponRepository;
     private final UserCouponRepository userCouponRepository;
     private final UserRepository userRepository;
-    private final CouponService self; // Self-injection for transaction proxy
-
-    // Constructor for self-injection with @Lazy to avoid circular dependency
-    public CouponService(CouponRepository couponRepository,
-                         UserCouponRepository userCouponRepository,
-                         UserRepository userRepository,
-                         @Lazy CouponService self) {
-        this.couponRepository = couponRepository;
-        this.userCouponRepository = userCouponRepository;
-        this.userRepository = userRepository;
-        this.self = self;
-    }
 
     public List<CouponResponse> getCoupons() {
         List<Coupon> coupons = couponRepository.findAll();
@@ -50,31 +45,12 @@ public class CouponService {
 
     private static final int MAX_RETRY_COUNT = 10;
 
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public UserCouponResponse issueCouponWithRetry(Long userId, IssueCouponRequest request) {
-        int retryCount = 0;
-
-        while (true) {
-            try {
-                // self를 통해 호출하여 트랜잭션 프록시를 거치도록 함
-                return self.issueCoupon(userId, request);
-            } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e) {
-                if (++retryCount >= MAX_RETRY_COUNT) {
-                    throw new ConflictException(CouponErrorCode.COUPON_ISSUE_CONFLICT);
-                }
-
-                // Exponential backoff with jitter to prevent thundering herd
-                try {
-                    long backoffMillis = (long) (Math.pow(2, retryCount - 1) * 50 + Math.random() * 50);
-                    Thread.sleep(Math.min(backoffMillis, 1000)); // Cap at 1 second
-                } catch (InterruptedException ignored) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-    }
-
     @Transactional
+    @Retryable(
+            value = {ObjectOptimisticLockingFailureException.class},
+            maxAttempts = MAX_RETRY_COUNT,
+            backoff = @Backoff(delay = 1000)
+    )
     public UserCouponResponse issueCoupon(Long userId, IssueCouponRequest request) {
         userRepository.findByIdOrThrow(userId);
         Coupon coupon = couponRepository.findByIdOrThrow(request.couponId());
