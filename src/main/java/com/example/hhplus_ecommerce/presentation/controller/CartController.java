@@ -1,10 +1,10 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.CartService;
-import com.example.hhplus_ecommerce.presentation.common.ApiResponse;
 import com.example.hhplus_ecommerce.presentation.dto.CartDto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,25 +17,25 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping("/users/{userId}/cart")
-    public ApiResponse<List<CartItemResponse>> getUserCart(
+    public ResponseEntity<List<CartItemResponse>> getUserCart(
             @PathVariable("userId") Long userId
     ) {
-        return ApiResponse.success(cartService.getUserCart(userId));
+        return ResponseEntity.ok(cartService.getUserCart(userId));
     }
 
     @PostMapping("/users/{userId}/cart")
-    public ApiResponse<CartItemResponse> addCartItem(
+    public ResponseEntity<CartItemResponse> addCartItem(
             @PathVariable("userId") Long userId,
             @Valid @RequestBody AddCartItemRequest request
     ) {
-        return ApiResponse.success(cartService.addCartItem(userId, request));
+        return ResponseEntity.ok(cartService.addCartItem(userId, request));
     }
 
     @DeleteMapping("/cart/{cartItemId}")
-    public ApiResponse<Void> deleteCartItem(
+    public ResponseEntity<Void> deleteCartItem(
             @PathVariable("cartItemId") Long cartItemId
     ) {
         cartService.deleteCartItem(cartItemId);
-        return ApiResponse.success(null);
+        return ResponseEntity.noContent().build();
     }
 }

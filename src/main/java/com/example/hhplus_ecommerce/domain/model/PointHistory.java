@@ -1,13 +1,22 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import lombok.Builder;
-import lombok.Getter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Getter
-@Builder
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class PointHistory extends BaseEntity {
+    @Column(nullable = false)
     private Long userId;
     private Long orderId;
+    @Enumerated(EnumType.STRING)
     private TransactionType transactionType;
     private Long amount;
     private Long balanceAfter;

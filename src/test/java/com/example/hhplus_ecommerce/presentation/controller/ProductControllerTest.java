@@ -1,8 +1,8 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.ProductService;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,9 +33,9 @@ class ProductControllerTest {
     void getProducts_Success() throws Exception {
         // given
         List<ProductResponse> products = List.of(
-                new ProductResponse(1L, "맥북 프로", "애플 맥북 프로", 2000000L, 10, 100),
-                new ProductResponse(2L, "아이패드", "애플 아이패드", 1000000L, 20, 200),
-                new ProductResponse(3L, "에어팟", "애플 에어팟", 300000L, 50, 300)
+                new ProductResponse(1L, "맥북 프로", "애플 맥북 프로", 2000000L, 10),
+                new ProductResponse(2L, "아이패드", "애플 아이패드", 1000000L, 20),
+                new ProductResponse(3L, "에어팟", "애플 에어팟", 300000L, 50)
         );
         when(productService.getProducts()).thenReturn(products);
 
@@ -43,14 +43,12 @@ class ProductControllerTest {
         mockMvc.perform(get("/api/v1/products"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(3))
-                .andExpect(jsonPath("$.data[0].productId").value(1))
-                .andExpect(jsonPath("$.data[0].productName").value("맥북 프로"))
-                .andExpect(jsonPath("$.data[0].price").value(2000000))
-                .andExpect(jsonPath("$.data[0].stockQuantity").value(10))
-                .andExpect(jsonPath("$.data[0].viewCount").value(100));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].productId").value(1))
+                .andExpect(jsonPath("$[0].productName").value("맥북 프로"))
+                .andExpect(jsonPath("$[0].price").value(2000000))
+                .andExpect(jsonPath("$[0].stockQuantity").value(10));
     }
 
     @Test
@@ -63,9 +61,8 @@ class ProductControllerTest {
         mockMvc.perform(get("/api/v1/products"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(0));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
@@ -73,20 +70,18 @@ class ProductControllerTest {
     void getProduct_Success() throws Exception {
         // given
         Long productId = 1L;
-        ProductResponse response = new ProductResponse(productId, "맥북 프로", "애플 맥북 프로", 2000000L, 10, 100);
+        ProductResponse response = new ProductResponse(productId, "맥북 프로", "애플 맥북 프로", 2000000L, 10);
         when(productService.getProduct(anyLong())).thenReturn(response);
 
         // when & then
         mockMvc.perform(get("/api/v1/products/{productId}", productId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.productId").value(productId))
-                .andExpect(jsonPath("$.data.productName").value("맥북 프로"))
-                .andExpect(jsonPath("$.data.description").value("애플 맥북 프로"))
-                .andExpect(jsonPath("$.data.price").value(2000000))
-                .andExpect(jsonPath("$.data.stockQuantity").value(10))
-                .andExpect(jsonPath("$.data.viewCount").value(100));
+                .andExpect(jsonPath("$.productId").value(productId))
+                .andExpect(jsonPath("$.productName").value("맥북 프로"))
+                .andExpect(jsonPath("$.description").value("애플 맥북 프로"))
+                .andExpect(jsonPath("$.price").value(2000000))
+                .andExpect(jsonPath("$.stockQuantity").value(10));
     }
 
     @Test
@@ -95,13 +90,14 @@ class ProductControllerTest {
         // given
         Long productId = 999L;
         when(productService.getProduct(anyLong()))
-                .thenThrow(new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+                .thenThrow(new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         // when & then
         mockMvc.perform(get("/api/v1/products/{productId}", productId))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -116,9 +112,8 @@ class ProductControllerTest {
         mockMvc.perform(get("/api/v1/products/{productId}/stock", productId))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.productId").value(productId))
-                .andExpect(jsonPath("$.data.stockQuantity").value(10));
+                .andExpect(jsonPath("$.productId").value(productId))
+                .andExpect(jsonPath("$.stockQuantity").value(10));
     }
 
     @Test
@@ -127,13 +122,14 @@ class ProductControllerTest {
         // given
         Long productId = 999L;
         when(productService.getProductStock(anyLong()))
-                .thenThrow(new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+                .thenThrow(new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         // when & then
         mockMvc.perform(get("/api/v1/products/{productId}/stock", productId))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -151,12 +147,11 @@ class ProductControllerTest {
         mockMvc.perform(get("/api/v1/products/popular"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(3))
-                .andExpect(jsonPath("$.data[0].productId").value(1))
-                .andExpect(jsonPath("$.data[0].productName").value("맥북 프로"))
-                .andExpect(jsonPath("$.data[0].viewCount").value(1000));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].productId").value(1))
+                .andExpect(jsonPath("$[0].productName").value("맥북 프로"))
+                .andExpect(jsonPath("$[0].viewCount").value(1000));
     }
 
     @Test
@@ -169,8 +164,7 @@ class ProductControllerTest {
         mockMvc.perform(get("/api/v1/products/popular"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(0));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }

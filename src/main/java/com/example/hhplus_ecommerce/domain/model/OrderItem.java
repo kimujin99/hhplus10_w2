@@ -1,12 +1,19 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import lombok.Builder;
-import lombok.Getter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Getter
-@Builder
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Entity
 public class OrderItem extends BaseEntity {
+    @Column(nullable = false)
     private Long orderId;
+    @Column(nullable = false)
     private Long productId;
     private Integer quantity;
     private String productName;

@@ -3,11 +3,13 @@ package com.example.hhplus_ecommerce.application.service;
 import com.example.hhplus_ecommerce.domain.model.Order;
 import com.example.hhplus_ecommerce.domain.model.OrderItem;
 import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.domain.repository.OrderItemRepository;
-import com.example.hhplus_ecommerce.domain.repository.OrderRepository;
-import com.example.hhplus_ecommerce.domain.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.BusinessException;
-import com.example.hhplus_ecommerce.presentation.common.ErrorCode;
+import com.example.hhplus_ecommerce.infrastructure.repository.OrderItemRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.OrderRepository;
+import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
+import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,7 +45,7 @@ class UserOrderServiceTest {
     void getUserOrders_Success() {
         // given
         Long userId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Order order1 = Order.builder()
                 .userId(userId)
                 .totalAmount(20000L)
@@ -59,7 +61,7 @@ class UserOrderServiceTest {
                 .deliveryAddress("서울시")
                 .build();
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
         given(orderRepository.findByUserId(userId)).willReturn(List.of(order1, order2));
 
         // when
@@ -67,7 +69,7 @@ class UserOrderServiceTest {
 
         // then
         assertThat(result).hasSize(2);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(orderRepository).findByUserId(userId);
     }
 
@@ -76,13 +78,14 @@ class UserOrderServiceTest {
     void getUserOrders_Fail_UserNotFound() {
         // given
         Long userId = 999L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> userOrderService.getUserOrders(userId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
+        verify(userRepository).findByIdOrThrow(userId);
         verify(orderRepository, never()).findByUserId(any());
     }
 
@@ -92,7 +95,7 @@ class UserOrderServiceTest {
         // given
         Long userId = 1L;
         Long orderId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Order order = Order.builder()
                 .userId(userId)
                 .totalAmount(20000L)
@@ -108,8 +111,8 @@ class UserOrderServiceTest {
                 .quantity(2)
                 .build();
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(orderRepository.findByIdOrThrow(orderId)).willReturn(order);
         given(orderItemRepository.findByOrderId(orderId)).willReturn(List.of(orderItem));
 
         // when
@@ -117,8 +120,8 @@ class UserOrderServiceTest {
 
         // then
         assertThat(result).isNotNull();
-        verify(userRepository).findById(userId);
-        verify(orderRepository).findById(orderId);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(orderRepository).findByIdOrThrow(orderId);
         verify(orderItemRepository).findByOrderId(orderId);
     }
 
@@ -128,14 +131,15 @@ class UserOrderServiceTest {
         // given
         Long userId = 999L;
         Long orderId = 1L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId))
+                .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> userOrderService.getUserOrder(userId, orderId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findById(userId);
-        verify(orderRepository, never()).findById(any());
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(orderRepository, never()).findByIdOrThrow(any());
     }
 
     @Test
@@ -144,17 +148,18 @@ class UserOrderServiceTest {
         // given
         Long userId = 1L;
         Long orderId = 999L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(orderRepository.findById(orderId)).willReturn(Optional.empty());
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(orderRepository.findByIdOrThrow(orderId))
+                .willThrow(new NotFoundException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> userOrderService.getUserOrder(userId, orderId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ORDER_NOT_FOUND);
-        verify(userRepository).findById(userId);
-        verify(orderRepository).findById(orderId);
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("errorCode", OrderErrorCode.ORDER_NOT_FOUND);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(orderRepository).findByIdOrThrow(orderId);
     }
 
     @Test
@@ -163,7 +168,7 @@ class UserOrderServiceTest {
         // given
         Long userId = 1L;
         Long orderId = 1L;
-        User user = new User();
+        User user = User.builder().point(0L).build();
         Order order = Order.builder()
                 .userId(2L) // 다른 사용자의 주문
                 .totalAmount(20000L)
@@ -172,15 +177,15 @@ class UserOrderServiceTest {
                 .deliveryAddress("부산시")
                 .build();
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
+        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
+        given(orderRepository.findByIdOrThrow(orderId)).willReturn(order);
 
         // when & then
         assertThatThrownBy(() -> userOrderService.getUserOrder(userId, orderId))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ORDER_NOT_FOUND);
-        verify(userRepository).findById(userId);
-        verify(orderRepository).findById(orderId);
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("errorCode", OrderErrorCode.ORDER_NOT_FOUND);
+        verify(userRepository).findByIdOrThrow(userId);
+        verify(orderRepository).findByIdOrThrow(orderId);
         verify(orderItemRepository, never()).findByOrderId(any());
     }
 }

@@ -3,12 +3,10 @@ package com.example.hhplus_ecommerce.presentation.dto;
 import com.example.hhplus_ecommerce.domain.model.PointHistory;
 import com.example.hhplus_ecommerce.domain.model.User;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
 public class UserDto {
 
     public record PointResponse(
