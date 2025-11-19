@@ -34,7 +34,7 @@ public class UserService {
 
     @Transactional
     public PointResponse chargePoint(Long userId, ChargePointRequest request) {
-        User user = userRepository.findByIdOrThrow(userId);
+        User user = userRepository.findByIdWithLockOrThrow(userId);
 
         user.chargePoint(request.amount());
         User savedUser = userRepository.save(user);

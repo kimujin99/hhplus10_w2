@@ -105,8 +105,8 @@ class CouponServiceTest {
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
         given(userRepository.findByIdOrThrow(userId)).willReturn(user);
-        given(couponRepository.findByIdOrThrow(couponId)).willReturn(coupon);
-        given(userCouponRepository.findByUserIdAndCoupon_Id(userId, couponId)).willReturn(Optional.empty());
+        given(couponRepository.findByIdWithLockOrThrow(couponId)).willReturn(coupon);
+        given(userCouponRepository.findByUserIdAndCouponIdWithLock(userId, couponId)).willReturn(Optional.empty());
         given(couponRepository.save(any(Coupon.class))).willReturn(coupon);
         given(userCouponRepository.save(any(UserCoupon.class))).willReturn(userCoupon);
 
@@ -116,8 +116,8 @@ class CouponServiceTest {
         // then
         assertThat(result).isNotNull();
         verify(userRepository).findByIdOrThrow(userId);
-        verify(couponRepository).findByIdOrThrow(couponId);
-        verify(userCouponRepository).findByUserIdAndCoupon_Id(userId, couponId);
+        verify(couponRepository).findByIdWithLockOrThrow(couponId);
+        verify(userCouponRepository).findByUserIdAndCouponIdWithLock(userId, couponId);
         verify(couponRepository).save(coupon);
         verify(userCouponRepository).save(any(UserCoupon.class));
     }
@@ -135,7 +135,7 @@ class CouponServiceTest {
                 .isInstanceOf(BaseException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
         verify(userRepository).findByIdOrThrow(userId);
-        verify(couponRepository, never()).findById(any());
+        verify(couponRepository, never()).findByIdWithLockOrThrow(any());
         verify(userCouponRepository, never()).save(any());
     }
 
@@ -149,14 +149,14 @@ class CouponServiceTest {
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
         given(userRepository.findByIdOrThrow(userId)).willReturn(user);
-        given(couponRepository.findByIdOrThrow(couponId)).willThrow(new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
+        given(couponRepository.findByIdWithLockOrThrow(couponId)).willThrow(new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> couponService.issueCoupon(userId, request))
                 .isInstanceOf(BaseException.class)
                 .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_NOT_FOUND);
         verify(userRepository).findByIdOrThrow(userId);
-        verify(couponRepository).findByIdOrThrow(couponId);
+        verify(couponRepository).findByIdWithLockOrThrow(couponId);
         verify(userCouponRepository, never()).save(any());
     }
 
@@ -184,16 +184,16 @@ class CouponServiceTest {
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
         given(userRepository.findByIdOrThrow(userId)).willReturn(user);
-        given(couponRepository.findByIdOrThrow(couponId)).willReturn(coupon);
-        given(userCouponRepository.findByUserIdAndCoupon_Id(userId, couponId)).willReturn(Optional.of(existingUserCoupon));
+        given(couponRepository.findByIdWithLockOrThrow(couponId)).willReturn(coupon);
+        given(userCouponRepository.findByUserIdAndCouponIdWithLock(userId, couponId)).willReturn(Optional.of(existingUserCoupon));
 
         // when & then
         assertThatThrownBy(() -> couponService.issueCoupon(userId, request))
                 .isInstanceOf(BaseException.class)
                 .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_ALREADY_ISSUED);
         verify(userRepository).findByIdOrThrow(userId);
-        verify(couponRepository).findByIdOrThrow(couponId);
-        verify(userCouponRepository).findByUserIdAndCoupon_Id(userId, couponId);
+        verify(couponRepository).findByIdWithLockOrThrow(couponId);
+        verify(userCouponRepository).findByUserIdAndCouponIdWithLock(userId, couponId);
         verify(couponRepository, never()).save(any());
         verify(userCouponRepository, never()).save(any());
     }

@@ -3,7 +3,9 @@ package com.example.hhplus_ecommerce.infrastructure.repository;
 import com.example.hhplus_ecommerce.domain.model.Product;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +18,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     default Product findByIdOrThrow(Long productId) {
         return findById(productId)
+                .orElseThrow(() -> new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+    }
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Product p WHERE p.id = :id")
+    Optional<Product> findByIdWithLock(@Param("id") Long id);
+
+    default Product findByIdWithLockOrThrow(Long productId) {
+        return findByIdWithLock(productId)
                 .orElseThrow(() -> new NotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
