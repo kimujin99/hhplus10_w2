@@ -79,9 +79,7 @@ public class CouponService {
         List<UserCoupon> userCoupons = userCouponRepository.findByUserId(userId);
 
         return userCoupons.stream()
-                .map(userCoupon -> {
-                    return UserCouponResponse.from(userCoupon, userCoupon.getCoupon());
-                })
+                .map(userCoupon -> UserCouponResponse.from(userCoupon, userCoupon.getCoupon()))
                 .toList();
     }
 }
