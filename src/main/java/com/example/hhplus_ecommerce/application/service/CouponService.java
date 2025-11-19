@@ -10,15 +10,9 @@ import com.example.hhplus_ecommerce.presentation.common.exception.ConflictExcept
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.CouponResponse;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.IssueCouponRequest;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.UserCouponResponse;
-import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.EnableRetry;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -43,19 +37,12 @@ public class CouponService {
         return CouponResponse.from(coupon);
     }
 
-    private static final int MAX_RETRY_COUNT = 10;
-
     @Transactional
-    @Retryable(
-            value = {ObjectOptimisticLockingFailureException.class},
-            maxAttempts = MAX_RETRY_COUNT,
-            backoff = @Backoff(delay = 1000)
-    )
     public UserCouponResponse issueCoupon(Long userId, IssueCouponRequest request) {
         userRepository.findByIdOrThrow(userId);
-        Coupon coupon = couponRepository.findByIdOrThrow(request.couponId());
+        Coupon coupon = couponRepository.findByIdWithLockOrThrow(request.couponId());
 
-        userCouponRepository.findByUserIdAndCoupon_Id(userId, request.couponId())
+        userCouponRepository.findByUserIdAndCouponIdWithLock(userId, request.couponId())
             .ifPresent(uc -> {
                 throw new ConflictException(CouponErrorCode.COUPON_ALREADY_ISSUED);
             });
