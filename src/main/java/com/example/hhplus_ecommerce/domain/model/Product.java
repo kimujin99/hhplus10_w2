@@ -22,15 +22,15 @@ public class Product extends BaseEntity {
     @Builder.Default
     private Integer viewCount = 0;
 
-    public void addStockQuantity(Integer stockQuantity) {
-        this.stockQuantity += stockQuantity;
-    }
-
     public void subStockQuantity(Integer stockQuantity) {
-        if(this.stockQuantity < stockQuantity) {
+        if(!hasSufficientStock(stockQuantity)) {
             throw new ConflictException(ProductErrorCode.INSUFFICIENT_STOCK);
         }
         this.stockQuantity -= stockQuantity;
+    }
+
+    public boolean hasSufficientStock(Integer quantity) {
+        return this.stockQuantity >= quantity;
     }
 
     public Integer getPurchaseCount() {
