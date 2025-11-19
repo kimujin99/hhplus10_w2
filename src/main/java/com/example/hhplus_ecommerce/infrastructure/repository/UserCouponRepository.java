@@ -28,4 +28,13 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
     @Query("SELECT uc FROM UserCoupon uc WHERE uc.userId = :userId AND uc.coupon.id = :couponId")
     Optional<UserCoupon> findByUserIdAndCouponIdWithLock(@Param("userId") Long userId, @Param("couponId") Long couponId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT uc FROM UserCoupon uc WHERE uc.id = :id")
+    Optional<UserCoupon> findByIdWithLock(@Param("id") Long id);
+
+    default UserCoupon findByIdWithLockOrThrow(Long userCouponId) {
+        return findByIdWithLock(userCouponId)
+                .orElseThrow(() -> new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
+    }
+
 }

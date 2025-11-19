@@ -54,7 +54,7 @@ public class MakeOrderService {
 
         for (CartItem cartItem : cartItems) {
             Product product = productRepository.findByIdOrThrow(cartItem.getProductId());
-            if (product.hasSufficientStock(cartItem.getQuantity())) {
+            if (!product.hasSufficientStock(cartItem.getQuantity())) {
                 throw new ConflictException(ProductErrorCode.INSUFFICIENT_STOCK);
             }
         }
