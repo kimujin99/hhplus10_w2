@@ -31,6 +31,10 @@ public class UserCoupon extends BaseEntity {
         this.status = UserCouponStatus.USED;
     }
 
+    public void cancelUse() {
+        this.status = UserCouponStatus.ISSUED;
+    }
+
     public boolean isUsed() {
         return this.status == UserCouponStatus.USED;
     }

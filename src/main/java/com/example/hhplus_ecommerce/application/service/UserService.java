@@ -20,6 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final UserPointService userPointService;
 
     public PointResponse getPoint(Long userId) {
         User user = userRepository.findByIdOrThrow(userId);
@@ -32,21 +33,7 @@ public class UserService {
         return PointHistoryResponse.fromList(pointHistories);
     }
 
-    @Transactional
     public PointResponse chargePoint(Long userId, ChargePointRequest request) {
-        User user = userRepository.findByIdWithLockOrThrow(userId);
-
-        user.chargePoint(request.amount());
-        User savedUser = userRepository.save(user);
-
-        PointHistory pointHistory = PointHistory.builder()
-                .userId(userId)
-                .transactionType(PointHistory.TransactionType.CHARGE)
-                .amount(request.amount())
-                .balanceAfter(savedUser.getPoint())
-                .build();
-        pointHistoryRepository.save(pointHistory);
-
-        return PointResponse.from(savedUser);
+        return userPointService.chargePoint(userId, request.amount());
     }
 }

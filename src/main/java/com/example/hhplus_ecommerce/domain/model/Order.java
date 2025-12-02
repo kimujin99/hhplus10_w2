@@ -21,8 +21,7 @@ public class Order extends BaseEntity {
     private Long totalAmount;
     private Long discountAmount;
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("PENDING")
-    @Builder.Default
+    @ColumnDefault("PENDING") @Builder.Default
     private OrderStatus status = OrderStatus.PENDING;
     private String ordererName;
     private String deliveryAddress;
