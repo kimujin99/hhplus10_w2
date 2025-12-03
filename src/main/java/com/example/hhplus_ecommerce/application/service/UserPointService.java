@@ -5,14 +5,12 @@ import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.infrastructure.lock.DistributedLock;
 import com.example.hhplus_ecommerce.infrastructure.repository.PointHistoryRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.dto.UserDto.PointResponse;
+import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * 사용자 포인트 관리 서비스
@@ -41,17 +39,21 @@ public class UserPointService {
      * @throws NotFoundException 사용자를 찾을 수 없는 경우
      * @throws ConflictException 포인트가 부족한 경우
      */
-    @DistributedLock(
-        key = "user:#{#userId}:point",
-        waitTime = 10L,
-        leaseTime = 5L,
-        timeUnit = TimeUnit.SECONDS
-    )
+    @DistributedLock(key = "'user:' + #userId + ':point'")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void usePoint(Long userId, Long amount) {
+    public void usePoint(Long userId, Long orderId, Long amount) {
         User user = userRepository.findByIdOrThrow(userId);
         user.usePoint(amount);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        PointHistory pointHistory = PointHistory.builder()
+                .userId(userId)
+                .orderId(orderId)
+                .transactionType(PointHistory.TransactionType.CHARGE)
+                .amount(amount)
+                .balanceAfter(savedUser.getPoint())
+                .build();
+        pointHistoryRepository.save(pointHistory);
 
         log.info("포인트 차감 성공: userId={}, amount={}, remainingPoint={}",
             userId, amount, user.getPoint());
@@ -71,28 +73,23 @@ public class UserPointService {
      * @return 충전 후 포인트 정보
      * @throws NotFoundException 사용자를 찾을 수 없는 경우
      */
-    @DistributedLock(
-        key = "user:#{#userId}:point",
-        waitTime = 10L,
-        leaseTime = 5L,
-        timeUnit = TimeUnit.SECONDS
-    )
+    @DistributedLock(key = "'user:' + #userId + ':point'")
     @Transactional
-    public PointResponse chargePoint(Long userId, Long amount) {
+    public PointResponse chargePoint(Long userId, ChargePointRequest request) {
         User user = userRepository.findByIdOrThrow(userId);
-        user.chargePoint(amount);
+        user.chargePoint(request.amount());
         User savedUser = userRepository.save(user);
 
         PointHistory pointHistory = PointHistory.builder()
                 .userId(userId)
                 .transactionType(PointHistory.TransactionType.CHARGE)
-                .amount(amount)
+                .amount(request.amount())
                 .balanceAfter(savedUser.getPoint())
                 .build();
         pointHistoryRepository.save(pointHistory);
 
         log.info("포인트 충전 성공: userId={}, amount={}, currentPoint={}",
-            userId, amount, savedUser.getPoint());
+            userId, request.amount(), savedUser.getPoint());
 
         return PointResponse.from(savedUser);
     }
@@ -106,12 +103,7 @@ public class UserPointService {
      * @param userId 포인트를 복구할 사용자 ID
      * @param amount 복구할 포인트 금액
      */
-    @DistributedLock(
-        key = "user:#{#userId}:point",
-        waitTime = 10L,
-        leaseTime = 5L,
-        timeUnit = TimeUnit.SECONDS
-    )
+    @DistributedLock(key = "'user:' + #userId + ':point'")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void refundPoint(Long userId, Long amount) {
         User user = userRepository.findByIdOrThrow(userId);

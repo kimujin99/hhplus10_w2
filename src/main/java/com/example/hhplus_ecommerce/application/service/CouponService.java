@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional(readOnly = true)
@@ -56,12 +55,7 @@ public class CouponService {
      * @throws NotFoundException 사용자 또는 쿠폰을 찾을 수 없는 경우
      * @throws ConflictException 쿠폰이 이미 발급되었거나 재고가 없는 경우
      */
-    @DistributedLock(
-        key = "coupon:issue:user:#{#userId}:coupon:#{#request.couponId}",
-        waitTime = 5L,
-        leaseTime = 3L,
-        timeUnit = TimeUnit.SECONDS
-    )
+    @DistributedLock(key = "'coupon:' + #request.couponId + ':stock'")
     @Transactional
     public UserCouponResponse issueCoupon(Long userId, IssueCouponRequest request) {
         userRepository.findByIdOrThrow(userId);

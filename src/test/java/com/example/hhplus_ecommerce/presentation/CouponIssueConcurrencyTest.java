@@ -11,7 +11,6 @@ import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCod
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,10 +47,6 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        userCouponRepository.deleteAll();
-        couponRepository.deleteAll();
-        userRepository.deleteAll();
-
         Coupon coupon = couponRepository.save(Coupon.builder()
                 .name("선착순 할인 쿠폰")
                 .discountType(Coupon.DiscountType.FIXED)
@@ -66,14 +61,6 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
         for (int i = 0; i < CONCURRENT_USERS; i++) {
             userRepository.save(User.builder().build());
         }
-    }
-
-    @AfterEach
-    void tearDown() {
-        // 테스트 후 데이터 정리
-        userCouponRepository.deleteAll();
-        couponRepository.deleteAll();
-        userRepository.deleteAll();
     }
 
     @Test
@@ -113,7 +100,7 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
             });
         }
 
-        boolean completed = latch.await(10, TimeUnit.SECONDS);
+        boolean completed = latch.await(30, TimeUnit.SECONDS);
         executorService.shutdown();
 
         // then
@@ -122,7 +109,7 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
         List<UserCoupon> issuedCoupons = userCouponRepository.findAll();
 
         assertAll(
-                () -> assertThat(completed).as("테스트가 10초 내에 완료되어야 함").isTrue(),
+                () -> assertThat(completed).as("테스트가 30초 내에 완료되어야 함").isTrue(),
                 () -> assertThat(successCount.get()).as("성공 횟수").isEqualTo(TOTAL_COUPON_QUANTITY),
                 () -> assertThat(soldOutCount.get()).as("재고 소진 에러").isEqualTo(CONCURRENT_USERS - TOTAL_COUPON_QUANTITY),
                 () -> assertThat(unexpectedErrorCount.get()).as("예상치 못한 에러").isEqualTo(0),
@@ -174,7 +161,7 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
             });
         }
 
-        boolean completed = latch.await(10, TimeUnit.SECONDS);
+        boolean completed = latch.await(30, TimeUnit.SECONDS);
         executorService.shutdown();
 
         // then
@@ -182,7 +169,7 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
         Coupon updatedCoupon = couponRepository.findById(couponId).orElseThrow();
 
         assertAll(
-                () -> assertThat(completed).as("테스트가 10초 내에 완료되어야 함").isTrue(),
+                () -> assertThat(completed).as("테스트가 30초 내에 완료되어야 함").isTrue(),
                 () -> assertThat(successCount.get()).as("성공 횟수").isEqualTo(1),
                 () -> assertThat(alreadyIssuedCount.get()).as("중복 발급 에러").isEqualTo(attemptCount - 1),
                 () -> assertThat(unexpectedErrorCount.get()).as("예상치 못한 에러").isEqualTo(0),

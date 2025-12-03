@@ -5,7 +5,6 @@ import com.example.hhplus_ecommerce.application.service.UserCouponService;
 import com.example.hhplus_ecommerce.application.service.UserPointService;
 import com.example.hhplus_ecommerce.domain.model.Order;
 import com.example.hhplus_ecommerce.domain.model.OrderItem;
-import com.example.hhplus_ecommerce.infrastructure.lock.DistributedLock;
 import com.example.hhplus_ecommerce.infrastructure.repository.OrderItemRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.OrderRepository;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.PaymentResponse;
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 결제 처리 유즈케이스
@@ -61,12 +59,6 @@ public class MakePaymentUseCase {
      * @throws NotFoundException 주문을 찾을 수 없는 경우
      * @throws ConflictException 재고/포인트 부족, 쿠폰 사용 불가 등
      */
-    @DistributedLock(
-        key = "payment:order:#{#orderId}",
-        waitTime = 10L,
-        leaseTime = 5L,
-        timeUnit = TimeUnit.SECONDS
-    )
     @Transactional
     public PaymentResponse execute(Long orderId) {
         Order order = orderRepository.findByIdOrThrow(orderId);
@@ -95,7 +87,7 @@ public class MakePaymentUseCase {
             }
 
             log.info("포인트 차감 시작: userId={}, amount={}", order.getUserId(), order.getFinalAmount());
-            userPointService.usePoint(order.getUserId(), order.getFinalAmount());
+            userPointService.usePoint(order.getUserId(), orderId, order.getFinalAmount());
             pointUsed = true;
 
             order.confirm();

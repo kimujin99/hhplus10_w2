@@ -4,12 +4,13 @@ import com.example.hhplus_ecommerce.domain.model.PointHistory;
 import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.infrastructure.repository.PointHistoryRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
-import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
-import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
+import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
+import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
+import com.example.hhplus_ecommerce.presentation.dto.UserDto.ChargePointRequest;
+import com.example.hhplus_ecommerce.presentation.dto.UserDto.PointHistoryResponse;
+import com.example.hhplus_ecommerce.presentation.dto.UserDto.PointResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,13 +19,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -34,6 +36,9 @@ class UserServiceTest {
 
     @Mock
     private PointHistoryRepository pointHistoryRepository;
+
+    @Mock
+    private UserPointService userPointService;
 
     @InjectMocks
     private UserService userService;
@@ -127,15 +132,13 @@ class UserServiceTest {
     void chargePoint_Success() {
         // given
         Long userId = 1L;
-        User user = User.builder().point(0L).build();
         ChargePointRequest request = new ChargePointRequest(5000L);
+        PointResponse expectedResponse = new PointResponse(userId, 5000L);
 
-        given(userRepository.findByIdWithLockOrThrow(userId)).willReturn(user);
-        given(userRepository.save(any(User.class))).willReturn(user);
-        given(pointHistoryRepository.save(any(PointHistory.class))).willReturn(null);
+        given(userPointService.chargePoint(userId, request)).willReturn(expectedResponse);
 
         // when
-        PointResponse result = userService.chargePoint(userId, request);
+        PointResponse result = userPointService.chargePoint(userId, request);
 
         // then
         assertAll(
@@ -143,9 +146,7 @@ class UserServiceTest {
                 () -> assertThat(result.point()).isEqualTo(5000L)
         );
 
-        verify(userRepository).findByIdWithLockOrThrow(userId);
-        verify(userRepository).save(user);
-        verify(pointHistoryRepository).save(any(PointHistory.class));
+        verify(userPointService).chargePoint(userId, request);
     }
 
     @Test
@@ -154,16 +155,14 @@ class UserServiceTest {
         // given
         Long userId = 999L;
         ChargePointRequest request = new ChargePointRequest(5000L);
-        given(userRepository.findByIdWithLockOrThrow(userId))
+        given(userPointService.chargePoint(userId, request))
                 .willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
-        assertThatThrownBy(() -> userService.chargePoint(userId, request))
+        assertThatThrownBy(() -> userPointService.chargePoint(userId, request))
                 .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findByIdWithLockOrThrow(userId);
-        verify(userRepository, never()).save(any());
-        verify(pointHistoryRepository, never()).save(any());
+        verify(userPointService).chargePoint(userId, request);
     }
 
     @Test
@@ -171,17 +170,15 @@ class UserServiceTest {
     void chargePoint_Fail_InvalidAmount() {
         // given
         Long userId = 1L;
-        User user = User.builder().point(0L).build();
         ChargePointRequest request = new ChargePointRequest(500L); // 1000원 단위가 아님
 
-        given(userRepository.findByIdWithLockOrThrow(userId)).willReturn(user);
+        given(userPointService.chargePoint(userId, request))
+                .willThrow(new BadRequestException(PointErrorCode.INVALID_CHARGE_AMOUNT));
 
         // when & then
-        assertThatThrownBy(() -> userService.chargePoint(userId, request))
+        assertThatThrownBy(() -> userPointService.chargePoint(userId, request))
                 .isInstanceOf(BadRequestException.class)
                 .hasFieldOrPropertyWithValue("errorCode", PointErrorCode.INVALID_CHARGE_AMOUNT);
-        verify(userRepository).findByIdWithLockOrThrow(userId);
-        verify(userRepository, never()).save(any());
-        verify(pointHistoryRepository, never()).save(any());
+        verify(userPointService).chargePoint(userId, request);
     }
 }

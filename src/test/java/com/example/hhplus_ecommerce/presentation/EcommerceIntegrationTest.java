@@ -12,7 +12,6 @@ import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
 class EcommerceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -248,7 +246,7 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
     void fullEcommerceFlow_WithoutCoupon() throws Exception {
         // 1. 사용자 생성
         User user = userRepository.save(User.builder().build());
-        Long userId = user.getId(); // 동적 ID 사용
+        Long userId = user.getId();
 
         // 2. 상품 생성
         Product product = productRepository.save(Product.builder()

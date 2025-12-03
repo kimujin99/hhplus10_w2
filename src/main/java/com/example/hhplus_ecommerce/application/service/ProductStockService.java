@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * 상품 재고 관리 서비스
  * <p>
@@ -37,12 +35,7 @@ public class ProductStockService {
      * @throws NotFoundException 상품을 찾을 수 없는 경우
      * @throws ConflictException 재고가 부족한 경우
      */
-    @DistributedLock(
-        key = "product:#{#productId}:stock",
-        waitTime = 10L,
-        leaseTime = 5L,
-        timeUnit = TimeUnit.SECONDS
-    )
+    @DistributedLock(key = "'product:' + #productId + ':stock'")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void decreaseStock(Long productId, int quantity) {
         Product product = productRepository.findByIdOrThrow(productId);
@@ -62,12 +55,7 @@ public class ProductStockService {
      * @param productId 재고를 복구할 상품 ID
      * @param quantity 복구할 수량
      */
-    @DistributedLock(
-        key = "product:#{#productId}:stock",
-        waitTime = 10L,
-        leaseTime = 5L,
-        timeUnit = TimeUnit.SECONDS
-    )
+    @DistributedLock(key = "'product:' + #productId + ':stock'")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void increaseStock(Long productId, int quantity) {
         Product product = productRepository.findByIdOrThrow(productId);
