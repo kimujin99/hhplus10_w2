@@ -1,6 +1,7 @@
 package com.example.hhplus_ecommerce.infrastructure.repository;
 
 import com.example.hhplus_ecommerce.domain.model.Product;
+import com.example.hhplus_ecommerce.infrastructure.dto.ProductScore;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import jakarta.persistence.LockModeType;
@@ -36,10 +37,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query(value = """
         SELECT p.*
         FROM product p
-        ORDER BY (p.view_count + ((p.original_stock_quantity - p.stock_quantity) * 1.0 / p.original_stock_quantity) * 100 * 2) DESC
+        ORDER BY (p.view_count + (p.original_stock_quantity - p.stock_quantity) * 2) DESC
         LIMIT 5
     """, nativeQuery = true)
     List<Product> findPopularProduct();
+
+    @Query("""
+        SELECT new com.example.hhplus_ecommerce.infrastructure.dto.ProductScore(p.id,
+            p.viewCount + (p.originalStockQuantity - p.stockQuantity) * 2)
+        FROM Product p
+    """)
+    List<ProductScore> findAllProductScores();
 
     @Modifying
     @Query(value = "UPDATE product SET view_count = view_count + 1 WHERE id = :id", nativeQuery = true)

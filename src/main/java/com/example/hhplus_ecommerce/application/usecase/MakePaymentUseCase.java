@@ -1,5 +1,6 @@
 package com.example.hhplus_ecommerce.application.usecase;
 
+import com.example.hhplus_ecommerce.application.service.PopularProductCacheService;
 import com.example.hhplus_ecommerce.application.service.ProductStockService;
 import com.example.hhplus_ecommerce.application.service.UserCouponService;
 import com.example.hhplus_ecommerce.application.service.UserPointService;
@@ -39,6 +40,7 @@ public class MakePaymentUseCase {
     private final ProductStockService productStockService;
     private final UserCouponService userCouponService;
     private final UserPointService userPointService;
+    private final PopularProductCacheService popularProductCacheService;
 
     /**
      * 주문에 대한 결제를 처리합니다.
@@ -94,6 +96,10 @@ public class MakePaymentUseCase {
             orderRepository.save(order);
 
             log.info("결제 완료: orderId={}", orderId);
+
+            // Redis 캐시에 구매 점수 증가 (비동기)
+            updatePopularityScore(orderItems);
+
             return PaymentResponse.from(order);
 
         } catch (Exception e) {
@@ -164,5 +170,24 @@ public class MakePaymentUseCase {
         }
 
         log.info("보상 트랜잭션 완료");
+    }
+
+    /**
+     * 인기 상품 점수를 업데이트합니다.
+     * <p>
+     * Redis 캐시 업데이트는 부가 기능이므로 실패해도 결제에 영향을 주지 않습니다.
+     * 별도의 try-catch로 감싸서 예외를 격리합니다.
+     *
+     * @param orderItems 구매된 상품 목록
+     */
+    private void updatePopularityScore(List<OrderItem> orderItems) {
+        try {
+            for (OrderItem item : orderItems) {
+                popularProductCacheService.incrementPurchaseScore(item.getProductId(), item.getQuantity());
+            }
+        } catch (Exception e) {
+            // Redis 업데이트 실패는 로그만 남기고 무시
+            log.error("인기 상품 점수 업데이트 실패: {}", e.getMessage(), e);
+        }
     }
 }
