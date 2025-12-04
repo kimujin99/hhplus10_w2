@@ -58,6 +58,9 @@ class CouponIssueConcurrencyTest extends AbstractIntegrationTest {
                 .build());
         this.couponId = coupon.getId();
 
+        // Redis 카운터 초기화
+        couponService.initializeCouponCache(couponId);
+
         for (int i = 0; i < CONCURRENT_USERS; i++) {
             userRepository.save(User.builder().build());
         }

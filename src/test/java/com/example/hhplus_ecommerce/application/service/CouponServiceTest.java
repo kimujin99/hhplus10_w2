@@ -9,6 +9,7 @@ import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
 import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
+import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +29,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -39,6 +45,12 @@ class CouponServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private StringRedisTemplate redisTemplate;
+
+    @Mock
+    private ValueOperations<String, String> valueOperations;
 
     @InjectMocks
     private CouponService couponService;
@@ -104,9 +116,14 @@ class CouponServiceTest {
                 .build();
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
+        // Redis mocking
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.setIfAbsent(anyString(), eq("1"), any(Duration.class))).willReturn(true);
+        given(valueOperations.increment(anyString())).willReturn(1L);
+
+        // DB mocking
         given(userRepository.findByIdOrThrow(userId)).willReturn(user);
-        given(couponRepository.findByIdWithLockOrThrow(couponId)).willReturn(coupon);
-        given(userCouponRepository.findByUserIdAndCouponIdWithLock(userId, couponId)).willReturn(Optional.empty());
+        given(couponRepository.findByIdOrThrow(couponId)).willReturn(coupon);
         given(couponRepository.save(any(Coupon.class))).willReturn(coupon);
         given(userCouponRepository.save(any(UserCoupon.class))).willReturn(userCoupon);
 
@@ -115,54 +132,42 @@ class CouponServiceTest {
 
         // then
         assertThat(result).isNotNull();
+        verify(redisTemplate, times(2)).opsForValue();
+        verify(valueOperations).setIfAbsent(anyString(), eq("1"), any(Duration.class));
+        verify(valueOperations).increment(anyString());
         verify(userRepository).findByIdOrThrow(userId);
-        verify(couponRepository).findByIdWithLockOrThrow(couponId);
-        verify(userCouponRepository).findByUserIdAndCouponIdWithLock(userId, couponId);
+        verify(couponRepository).findByIdOrThrow(couponId);
         verify(couponRepository).save(coupon);
         verify(userCouponRepository).save(any(UserCoupon.class));
     }
 
     @Test
-    @DisplayName("쿠폰 발급 실패 - 사용자 없음")
-    void issueCoupon_Fail_UserNotFound() {
-        // given
-        Long userId = 999L;
-        IssueCouponRequest request = new IssueCouponRequest(1L);
-        given(userRepository.findByIdOrThrow(userId)).willThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
-
-        // when & then
-        assertThatThrownBy(() -> couponService.issueCoupon(userId, request))
-                .isInstanceOf(BaseException.class)
-                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND);
-        verify(userRepository).findByIdOrThrow(userId);
-        verify(couponRepository, never()).findByIdWithLockOrThrow(any());
-        verify(userCouponRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("쿠폰 발급 실패 - 쿠폰 없음")
-    void issueCoupon_Fail_CouponNotFound() {
+    @DisplayName("쿠폰 발급 실패 - 이미 발급된 쿠폰 (Redis SETNX 실패)")
+    void issueCoupon_Fail_AlreadyIssued() {
         // given
         Long userId = 1L;
-        Long couponId = 999L;
-        User user = User.builder().point(0L).build();
+        Long couponId = 1L;
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
-        given(userRepository.findByIdOrThrow(userId)).willReturn(user);
-        given(couponRepository.findByIdWithLockOrThrow(couponId)).willThrow(new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND));
+        // Redis SETNX 실패 (이미 존재하는 키)
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.setIfAbsent(anyString(), eq("1"), any(Duration.class))).willReturn(false);
 
         // when & then
         assertThatThrownBy(() -> couponService.issueCoupon(userId, request))
-                .isInstanceOf(BaseException.class)
-                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_NOT_FOUND);
-        verify(userRepository).findByIdOrThrow(userId);
-        verify(couponRepository).findByIdWithLockOrThrow(couponId);
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_ALREADY_ISSUED);
+
+        verify(redisTemplate).opsForValue();
+        verify(valueOperations).setIfAbsent(anyString(), eq("1"), any(Duration.class));
+        verify(userRepository, never()).findByIdOrThrow(any());
+        verify(couponRepository, never()).save(any());
         verify(userCouponRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("쿠폰 발급 실패 - 이미 발급된 쿠폰")
-    void issueCoupon_Fail_AlreadyIssued() {
+    @DisplayName("쿠폰 발급 실패 - 재고 부족")
+    void issueCoupon_Fail_SoldOut() {
         // given
         Long userId = 1L;
         Long couponId = 1L;
@@ -173,27 +178,29 @@ class CouponServiceTest {
                 .discountType(Coupon.DiscountType.PERCENTAGE)
                 .discountValue(10L)
                 .totalQuantity(100)
-                .issuedQuantity(0)
+                .issuedQuantity(100)  // 이미 모두 발급됨
                 .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(7))
                 .build();
-        UserCoupon existingUserCoupon = UserCoupon.builder()
-                .userId(userId)
-                .coupon(coupon)
-                .build();
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
+        // Redis mocking - 재고 초과
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.setIfAbsent(anyString(), eq("1"), any(Duration.class))).willReturn(true);
+        given(valueOperations.increment(anyString())).willReturn(101L);  // 재고 초과
+
+        // DB mocking
         given(userRepository.findByIdOrThrow(userId)).willReturn(user);
-        given(couponRepository.findByIdWithLockOrThrow(couponId)).willReturn(coupon);
-        given(userCouponRepository.findByUserIdAndCouponIdWithLock(userId, couponId)).willReturn(Optional.of(existingUserCoupon));
+        given(couponRepository.findByIdOrThrow(couponId)).willReturn(coupon);
 
         // when & then
         assertThatThrownBy(() -> couponService.issueCoupon(userId, request))
-                .isInstanceOf(BaseException.class)
-                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_ALREADY_ISSUED);
-        verify(userRepository).findByIdOrThrow(userId);
-        verify(couponRepository).findByIdWithLockOrThrow(couponId);
-        verify(userCouponRepository).findByUserIdAndCouponIdWithLock(userId, couponId);
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CouponErrorCode.COUPON_SOLD_OUT);
+
+        // Redis 롤백 검증
+        verify(valueOperations).decrement(anyString());
+        verify(redisTemplate).delete(anyString());
         verify(couponRepository, never()).save(any());
         verify(userCouponRepository, never()).save(any());
     }

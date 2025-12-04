@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -23,6 +24,9 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired(required = false)
+    private StringRedisTemplate stringRedisTemplate;
 
     // Singleton 패턴으로 모든 테스트가 하나의 컨테이너 인스턴스를 공유
     protected static final MySQLContainer<?> container;
@@ -70,17 +74,22 @@ public abstract class AbstractIntegrationTest {
      * RedisTemplate이 없으면 스킵합니다.
      */
     private void cleanupRedis() {
-        if (redisTemplate == null) {
-            return;
-        }
-
         try {
-            Set<String> keys = redisTemplate.keys("*");
-            if (keys != null && !keys.isEmpty()) {
-                redisTemplate.delete(keys);
+            // StringRedisTemplate 우선 사용
+            if (stringRedisTemplate != null) {
+                Set<String> keys = stringRedisTemplate.keys("*");
+                if (keys != null && !keys.isEmpty()) {
+                    stringRedisTemplate.delete(keys);
+                }
+            } else if (redisTemplate != null) {
+                Set<String> keys = redisTemplate.keys("*");
+                if (keys != null && !keys.isEmpty()) {
+                    redisTemplate.delete(keys);
+                }
             }
         } catch (Exception e) {
             // Redis 연결 실패 시 무시 (로컬 환경에서 Redis 없을 수 있음)
+            System.err.println("Redis cleanup failed: " + e.getMessage());
         }
     }
 

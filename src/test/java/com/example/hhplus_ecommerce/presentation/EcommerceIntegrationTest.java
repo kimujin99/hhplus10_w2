@@ -1,5 +1,6 @@
 package com.example.hhplus_ecommerce.presentation;
 
+import com.example.hhplus_ecommerce.application.service.CouponService;
 import com.example.hhplus_ecommerce.domain.model.Coupon;
 import com.example.hhplus_ecommerce.domain.model.Product;
 import com.example.hhplus_ecommerce.domain.model.User;
@@ -42,6 +43,9 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private CouponRepository couponRepository;
 
+    @Autowired
+    private CouponService couponService;
+
     private Long getSavedUserId() {
         User user = userRepository.save(User.builder().build());
         return user.getId();
@@ -74,6 +78,7 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
                 .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
         Long couponId = coupon.getId();
+        couponService.initializeCouponCache(couponId);
 
         // 1. 사용자 포인트 조회 (초기 포인트 확인)
         mockMvc.perform(get("/api/v1/users/{userId}/points", userId))
@@ -391,6 +396,7 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
                 .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
         Long limitedCouponId = coupon.getId();
+        couponService.initializeCouponCache(limitedCouponId);
 
         IssueCouponRequest request = new IssueCouponRequest(limitedCouponId);
 
@@ -433,6 +439,7 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
                 .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
         Long couponId = coupon.getId();
+        couponService.initializeCouponCache(couponId);
 
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 
