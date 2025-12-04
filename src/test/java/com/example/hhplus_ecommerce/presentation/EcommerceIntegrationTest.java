@@ -70,7 +70,7 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
                 .discountValue(50000L)
                 .totalQuantity(10)
                 .issuedQuantity(0)
-                .validFrom(LocalDateTime.now())
+                .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
         Long couponId = coupon.getId();
@@ -387,7 +387,7 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
                 .discountValue(50000L)
                 .totalQuantity(10)
                 .issuedQuantity(9)
-                .validFrom(LocalDateTime.now())
+                .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
         Long limitedCouponId = coupon.getId();
@@ -429,7 +429,7 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
                 .discountValue(50000L)
                 .totalQuantity(10)
                 .issuedQuantity(0)
-                .validFrom(LocalDateTime.now())
+                .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
         Long couponId = coupon.getId();
