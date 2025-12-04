@@ -17,7 +17,8 @@ public enum CommonErrorCode implements ErrorCode {
     BINDING_ERROR(HttpStatus.BAD_REQUEST, "바인딩 오류가 발생했습니다."),
     CONSTRAINT_VIOLATION(HttpStatus.BAD_REQUEST, "제약 조건 위반입니다."),
     INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "상품 수량은 하나 이상이어야 합니다."),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
+    OPTIMISTIC_LOCK_CONFLICT(HttpStatus.CONFLICT, "동시 요청으로 인해 처리에 실패했습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

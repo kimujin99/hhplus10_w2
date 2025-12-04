@@ -1,5 +1,6 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
+import com.example.hhplus_ecommerce.application.service.UserPointService;
 import com.example.hhplus_ecommerce.application.service.UserService;
 import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
@@ -36,6 +37,9 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private UserPointService userPointService;
 
     @Test
     @DisplayName("GET /api/v1/users/{userId}/points - 포인트 조회 성공")
@@ -117,7 +121,7 @@ class UserControllerTest {
         Long userId = 1L;
         ChargePointRequest request = new ChargePointRequest(100000L);
         PointResponse response = new PointResponse(userId, 150000L);
-        when(userService.chargePoint(anyLong(), any(ChargePointRequest.class))).thenReturn(response);
+        when(userPointService.chargePoint(anyLong(), any(ChargePointRequest.class))).thenReturn(response);
 
         // when & then
         mockMvc.perform(post("/api/v1/users/{userId}/points/charge", userId)
@@ -135,7 +139,7 @@ class UserControllerTest {
         // given
         Long userId = 999L;
         ChargePointRequest request = new ChargePointRequest(100000L);
-        when(userService.chargePoint(anyLong(), any(ChargePointRequest.class)))
+        when(userPointService.chargePoint(anyLong(), any(ChargePointRequest.class)))
                 .thenThrow(new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
         // when & then
@@ -154,7 +158,7 @@ class UserControllerTest {
         // given
         Long userId = 1L;
         ChargePointRequest request = new ChargePointRequest(-10000L);
-        when(userService.chargePoint(anyLong(), any(ChargePointRequest.class)))
+        when(userPointService.chargePoint(anyLong(), any(ChargePointRequest.class)))
                 .thenThrow(new BadRequestException(PointErrorCode.INVALID_CHARGE_AMOUNT));
 
         // when & then

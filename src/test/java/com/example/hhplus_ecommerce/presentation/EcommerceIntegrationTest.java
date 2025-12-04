@@ -1,5 +1,6 @@
 package com.example.hhplus_ecommerce.presentation;
 
+import com.example.hhplus_ecommerce.application.service.CouponService;
 import com.example.hhplus_ecommerce.domain.model.Coupon;
 import com.example.hhplus_ecommerce.domain.model.Product;
 import com.example.hhplus_ecommerce.domain.model.User;
@@ -12,7 +13,6 @@ import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
 class EcommerceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -43,6 +42,9 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private CouponRepository couponRepository;
+
+    @Autowired
+    private CouponService couponService;
 
     private Long getSavedUserId() {
         User user = userRepository.save(User.builder().build());
@@ -72,10 +74,11 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
                 .discountValue(50000L)
                 .totalQuantity(10)
                 .issuedQuantity(0)
-                .validFrom(LocalDateTime.now())
+                .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
         Long couponId = coupon.getId();
+        couponService.initializeCouponCache(couponId);
 
         // 1. 사용자 포인트 조회 (초기 포인트 확인)
         mockMvc.perform(get("/api/v1/users/{userId}/points", userId))
@@ -248,7 +251,7 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
     void fullEcommerceFlow_WithoutCoupon() throws Exception {
         // 1. 사용자 생성
         User user = userRepository.save(User.builder().build());
-        Long userId = user.getId(); // 동적 ID 사용
+        Long userId = user.getId();
 
         // 2. 상품 생성
         Product product = productRepository.save(Product.builder()
@@ -389,10 +392,11 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
                 .discountValue(50000L)
                 .totalQuantity(10)
                 .issuedQuantity(9)
-                .validFrom(LocalDateTime.now())
+                .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
         Long limitedCouponId = coupon.getId();
+        couponService.initializeCouponCache(limitedCouponId);
 
         IssueCouponRequest request = new IssueCouponRequest(limitedCouponId);
 
@@ -431,10 +435,11 @@ class EcommerceIntegrationTest extends AbstractIntegrationTest {
                 .discountValue(50000L)
                 .totalQuantity(10)
                 .issuedQuantity(0)
-                .validFrom(LocalDateTime.now())
+                .validFrom(LocalDateTime.now().minusDays(1))
                 .validUntil(LocalDateTime.now().plusDays(2))
                 .build());
         Long couponId = coupon.getId();
+        couponService.initializeCouponCache(couponId);
 
         IssueCouponRequest request = new IssueCouponRequest(couponId);
 

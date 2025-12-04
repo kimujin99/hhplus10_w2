@@ -1,5 +1,6 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
+import com.example.hhplus_ecommerce.application.service.UserPointService;
 import com.example.hhplus_ecommerce.application.service.UserService;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
 import jakarta.validation.Valid;
@@ -15,6 +16,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final UserPointService userPointService;
 
     @GetMapping("/{userId}/points")
     public ResponseEntity<PointResponse> getPoint(@PathVariable("userId") Long userId) {
@@ -31,6 +33,6 @@ public class UserController {
             @PathVariable("userId") Long userId,
             @Valid @RequestBody ChargePointRequest request
     ) {
-        return ResponseEntity.ok(userService.chargePoint(userId, request));
+        return ResponseEntity.ok(userPointService.chargePoint(userId, request));
     }
 }

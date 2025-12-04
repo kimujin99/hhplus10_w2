@@ -36,8 +36,7 @@ CREATE TABLE `coupon` (
                           `valid_from` DATETIME,
                           `valid_until` DATETIME,
                           `created_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
-                          `updated_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-                          `version` BIGINT DEFAULT 0
+                          `updated_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ===========================
@@ -50,7 +49,8 @@ CREATE TABLE `user_coupon` (
                                `order_id` BIGINT,
                                `status` VARCHAR(50) NOT NULL DEFAULT 'ISSUED',
                                `created_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
-                               `updated_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)
+                               `updated_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+                               `version` BIGINT DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ===========================
