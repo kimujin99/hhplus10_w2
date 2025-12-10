@@ -11,6 +11,7 @@ import com.example.hhplus_ecommerce.infrastructure.repository.OrderRepository;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.PaymentResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -180,7 +181,8 @@ public class MakePaymentUseCase {
      *
      * @param orderItems 구매된 상품 목록
      */
-    private void updatePopularityScore(List<OrderItem> orderItems) {
+    @Async("asyncExecutor")
+    public void updatePopularityScore(List<OrderItem> orderItems) {
         try {
             for (OrderItem item : orderItems) {
                 popularProductCacheService.incrementPurchaseScore(item.getProductId(), item.getQuantity());

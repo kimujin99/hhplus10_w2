@@ -65,7 +65,7 @@ public class PopularProductCacheService {
      *
      * @param productId 조회된 상품 ID
      */
-    @Async
+    @Async("asyncExecutor")
     public void incrementViewScore(Long productId) {
         try {
             String member = "product:" + productId;
@@ -85,7 +85,6 @@ public class PopularProductCacheService {
      * @param productId 구매된 상품 ID
      * @param quantity 구매 수량
      */
-    @Async
     public void incrementPurchaseScore(Long productId, int quantity) {
         try {
             String member = "product:" + productId;
