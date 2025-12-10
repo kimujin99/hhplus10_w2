@@ -53,6 +53,15 @@ public class Coupon extends BaseEntity {
         return now.isBefore(this.validFrom) || now.isAfter(this.validUntil);
     }
 
+    /**
+     * 발급 수량을 증가시킵니다. (배치 처리용)
+     *
+     * @param count 증가시킬 수량
+     */
+    public void incrementIssuedQuantity(int count) {
+        this.issuedQuantity += count;
+    }
+
     public enum DiscountType {
         PERCENTAGE,
         FIXED

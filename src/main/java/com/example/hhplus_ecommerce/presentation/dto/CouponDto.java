@@ -74,4 +74,9 @@ public class CouponDto {
             Long couponId
     ) {
     }
+
+    public record IssueCouponResponse(
+            String message
+    ) {
+    }
 }

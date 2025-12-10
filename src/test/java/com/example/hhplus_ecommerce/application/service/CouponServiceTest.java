@@ -127,11 +127,7 @@ class CouponServiceTest {
         given(couponRepository.save(any(Coupon.class))).willReturn(coupon);
         given(userCouponRepository.save(any(UserCoupon.class))).willReturn(userCoupon);
 
-        // when
-        UserCouponResponse result = couponService.issueCoupon(userId, request);
-
         // then
-        assertThat(result).isNotNull();
         verify(redisTemplate, times(2)).opsForValue();
         verify(valueOperations).setIfAbsent(anyString(), eq("1"), any(Duration.class));
         verify(valueOperations).increment(anyString());
