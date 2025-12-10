@@ -1,9 +1,10 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
-import com.example.hhplus_ecommerce.application.service.ProductService;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
-import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;
+import com.example.hhplus_ecommerce.product.application.ProductService;
+import com.example.hhplus_ecommerce.common.presentation.exception.NotFoundException;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.product.presentation.dto.ProductDto.*;
+import com.example.hhplus_ecommerce.product.presentation.controller.ProductController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

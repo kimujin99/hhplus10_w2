@@ -1,0 +1,51 @@
+package com.example.hhplus_ecommerce.order.presentation.controller;
+
+import com.example.hhplus_ecommerce.order.application.MakeOrderService;
+import com.example.hhplus_ecommerce.order.application.UserOrderService;
+import com.example.hhplus_ecommerce.order.application.MakePaymentUseCase;
+import com.example.hhplus_ecommerce.order.presentation.dto.OrderDto.*;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1")
+@RequiredArgsConstructor
+public class OrderController {
+
+    private final MakeOrderService makeOrderService;
+    private final MakePaymentUseCase makePaymentUseCase;
+    private final UserOrderService userOrderService;
+
+    @PostMapping("/orders")
+    public ResponseEntity<OrderResponse> makeOrder (
+            @Valid @RequestBody OrderRequest orderRequest
+    ) {
+        return ResponseEntity.ok(makeOrderService.execute(orderRequest));
+    }
+
+    @GetMapping("/users/{userId}/orders")
+    public ResponseEntity<List<UserOrderResponse>> getUserOrders(
+            @PathVariable("userId") Long userId
+    ) {
+        return ResponseEntity.ok(userOrderService.getUserOrders(userId));
+    }
+
+    @GetMapping("/users/{userId}/orders/{orderId}")
+    public ResponseEntity<OrderResponse> getUserOrder(
+            @PathVariable("userId") Long userId,
+            @PathVariable("orderId") Long orderId
+    ) {
+        return ResponseEntity.ok(userOrderService.getUserOrder(userId, orderId));
+    }
+
+    @PostMapping("/orders/{orderId}/payments")
+    public ResponseEntity<PaymentResponse> makePayment (
+            @PathVariable("orderId") Long orderId
+    ) {
+        return ResponseEntity.ok(makePaymentUseCase.execute(orderId));
+    }
+}

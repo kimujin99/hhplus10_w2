@@ -1,16 +1,16 @@
 package com.example.hhplus_ecommerce.presentation;
 
-import com.example.hhplus_ecommerce.application.service.CouponService;
-import com.example.hhplus_ecommerce.domain.model.Coupon;
-import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.domain.model.UserCoupon;
-import com.example.hhplus_ecommerce.infrastructure.repository.CouponRepository;
-import com.example.hhplus_ecommerce.infrastructure.repository.UserCouponRepository;
-import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
-import com.example.hhplus_ecommerce.infrastructure.scheduler.CouponIssueScheduler;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
-import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
+import com.example.hhplus_ecommerce.coupon.application.CouponService;
+import com.example.hhplus_ecommerce.coupon.domain.Coupon;
+import com.example.hhplus_ecommerce.user.domain.User;
+import com.example.hhplus_ecommerce.coupon.domain.UserCoupon;
+import com.example.hhplus_ecommerce.coupon.infrastructure.repository.CouponRepository;
+import com.example.hhplus_ecommerce.coupon.infrastructure.repository.UserCouponRepository;
+import com.example.hhplus_ecommerce.user.infrastructure.UserRepository;
+import com.example.hhplus_ecommerce.coupon.infrastructure.scheduler.CouponIssueScheduler;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.CouponErrorCode;
+import com.example.hhplus_ecommerce.common.presentation.exception.ConflictException;
+import com.example.hhplus_ecommerce.coupon.presentaion.dto.CouponDto.*;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

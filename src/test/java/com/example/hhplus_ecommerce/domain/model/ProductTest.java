@@ -1,7 +1,8 @@
 package com.example.hhplus_ecommerce.domain.model;
 
-import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.common.presentation.exception.BaseException;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.product.domain.Product;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

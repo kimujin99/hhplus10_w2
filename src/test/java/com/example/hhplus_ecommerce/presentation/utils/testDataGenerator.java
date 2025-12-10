@@ -1,7 +1,15 @@
 package com.example.hhplus_ecommerce.presentation.utils;
 
-import com.example.hhplus_ecommerce.domain.model.*;
-import com.example.hhplus_ecommerce.infrastructure.repository.*;
+import com.example.hhplus_ecommerce.cart.infrastructure.CartItemRepository;
+import com.example.hhplus_ecommerce.cart.model.CartItem;
+import com.example.hhplus_ecommerce.order.domain.Order;
+import com.example.hhplus_ecommerce.order.domain.OrderItem;
+import com.example.hhplus_ecommerce.order.infrastructure.OrderItemRepository;
+import com.example.hhplus_ecommerce.order.infrastructure.OrderRepository;
+import com.example.hhplus_ecommerce.product.domain.Product;
+import com.example.hhplus_ecommerce.product.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.user.infrastructure.UserRepository;
+import com.example.hhplus_ecommerce.user.domain.User;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
