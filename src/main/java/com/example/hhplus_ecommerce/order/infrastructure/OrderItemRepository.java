@@ -1,6 +1,6 @@
 package com.example.hhplus_ecommerce.order.infrastructure;
 
-import com.example.hhplus_ecommerce.order.domain.OrderItem;
+import com.example.hhplus_ecommerce.order.domain.model.OrderItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

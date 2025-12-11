@@ -1,10 +1,10 @@
 package com.example.hhplus_ecommerce.product.application;
 
 import com.example.hhplus_ecommerce.product.infrastructure.dto.ProductScore;
+import com.example.hhplus_ecommerce.product.infrastructure.redis.ProductPopularityRedisRepository;
 import com.example.hhplus_ecommerce.product.infrastructure.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +16,8 @@ import java.util.List;
  * <p>
  * Redis Sorted Set을 사용하여 인기 상품 점수를 관리합니다.
  * 점수 = 조회수 + (판매수 * 2)
+ * <p>
+ * ProductPopularityRedisRepository를 통해 Redis 접근을 추상화합니다.
  */
 @Slf4j
 @Service
@@ -23,14 +25,11 @@ import java.util.List;
 public class PopularProductCacheService {
 
     private final ProductRepository productRepository;
-    private final StringRedisTemplate redisTemplate;
-
-    private static final String POPULAR_PRODUCTS_KEY = "popular:products";
+    private final ProductPopularityRedisRepository popularityRedisRepository;
 
     /**
      * DB의 모든 상품 점수를 계산하여 Redis에 초기화합니다.
      * <p>
-     * Redis Pipeline을 사용하여 대량 데이터를 효율적으로 삽입합니다.
      * 서버 시작 시 또는 수동 API 호출로 실행됩니다.
      */
     @Transactional(readOnly = true)
@@ -39,21 +38,15 @@ public class PopularProductCacheService {
 
         List<ProductScore> productScores = productRepository.findAllProductScores();
 
-        // Redis Pipeline 사용 (네트워크 왕복 최소화)
-        redisTemplate.executePipelined((org.springframework.data.redis.core.RedisCallback<Object>) connection -> {
-            productScores.forEach(score -> {
-                String key = POPULAR_PRODUCTS_KEY;
-                String member = "product:" + score.id();
-                double scoreValue = score.score();
-
-                connection.zSetCommands().zAdd(
-                        key.getBytes(),
-                        scoreValue,
-                        member.getBytes()
-                );
-            });
-            return null; // Pipeline 실행 시 null 반환
-        });
+        // ProductPopularityRedisRepository를 통해 캐시 초기화
+        popularityRedisRepository.initializeCache();
+        productScores.forEach(score ->
+            popularityRedisRepository.addToSortedSet(
+                "popular:products",
+                "product:" + score.id(),
+                score.score()
+            )
+        );
 
         log.info("인기 상품 캐시 초기화 완료: {} 개 상품", productScores.size());
     }
@@ -68,9 +61,7 @@ public class PopularProductCacheService {
     @Async("asyncExecutor")
     public void incrementViewScore(Long productId) {
         try {
-            String member = "product:" + productId;
-            redisTemplate.opsForZSet().incrementScore(POPULAR_PRODUCTS_KEY, member, 1.0);
-            log.debug("조회수 점수 증가: productId={}", productId);
+            popularityRedisRepository.incrementViewScore(productId);
         } catch (Exception e) {
             log.error("조회수 점수 증가 실패: productId={}, error={}", productId, e.getMessage());
         }
@@ -79,7 +70,6 @@ public class PopularProductCacheService {
     /**
      * 결제 완료 시 구매된 상품들의 점수를 증가시킵니다.
      * <p>
-     * 비동기로 실행되어 결제 성능에 영향을 주지 않습니다.
      * 상품별 구매 수량 * 2만큼 점수를 증가시킵니다.
      *
      * @param productId 구매된 상품 ID
@@ -87,11 +77,7 @@ public class PopularProductCacheService {
      */
     public void incrementPurchaseScore(Long productId, int quantity) {
         try {
-            String member = "product:" + productId;
-            double scoreIncrement = quantity * 2.0;
-            redisTemplate.opsForZSet().incrementScore(POPULAR_PRODUCTS_KEY, member, scoreIncrement);
-            log.debug("구매 점수 증가: productId={}, quantity={}, scoreIncrement={}",
-                    productId, quantity, scoreIncrement);
+            popularityRedisRepository.incrementPurchaseScore(productId, quantity);
         } catch (Exception e) {
             log.error("구매 점수 증가 실패: productId={}, quantity={}, error={}",
                     productId, quantity, e.getMessage());
@@ -105,25 +91,23 @@ public class PopularProductCacheService {
      * @return 상품 ID 목록 (점수 높은 순)
      */
     public List<Long> getTopProductIds(int limit) {
-        // ZREVRANGE: 점수 높은 순으로 조회
-        var members = redisTemplate.opsForZSet()
-                .reverseRange(POPULAR_PRODUCTS_KEY, 0, limit - 1);
-
-        if (members == null || members.isEmpty()) {
-            log.warn("Redis 캐시가 비어있습니다. 초기화가 필요합니다.");
+        try {
+            return popularityRedisRepository.getTopProductIds(limit);
+        } catch (Exception e) {
+            log.error("인기 상품 조회 실패: limit={}, error={}", limit, e.getMessage());
             return List.of();
         }
-
-        return members.stream()
-                .map(member -> Long.parseLong(member.replace("product:", "")))
-                .toList();
     }
 
     /**
      * 캐시를 초기화(삭제)합니다.
      */
     public void clearCache() {
-        redisTemplate.delete(POPULAR_PRODUCTS_KEY);
-        log.info("인기 상품 캐시 삭제 완료");
+        try {
+            popularityRedisRepository.initializeCache();
+            log.info("인기 상품 캐시 삭제 완료");
+        } catch (Exception e) {
+            log.error("캐시 삭제 실패: error={}", e.getMessage());
+        }
     }
 }

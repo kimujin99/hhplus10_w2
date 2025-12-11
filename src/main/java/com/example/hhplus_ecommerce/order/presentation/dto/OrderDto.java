@@ -1,7 +1,7 @@
 package com.example.hhplus_ecommerce.order.presentation.dto;
 
-import com.example.hhplus_ecommerce.order.domain.Order;
-import com.example.hhplus_ecommerce.order.domain.OrderItem;
+import com.example.hhplus_ecommerce.order.domain.model.Order;
+import com.example.hhplus_ecommerce.order.domain.model.OrderItem;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 

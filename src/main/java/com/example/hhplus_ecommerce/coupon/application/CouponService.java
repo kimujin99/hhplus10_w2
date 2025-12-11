@@ -3,6 +3,7 @@ package com.example.hhplus_ecommerce.coupon.application;
 import com.example.hhplus_ecommerce.coupon.domain.Coupon;
 import com.example.hhplus_ecommerce.coupon.domain.UserCoupon;
 import com.example.hhplus_ecommerce.coupon.infrastructure.dto.CouponIssueQueueItem;
+import com.example.hhplus_ecommerce.coupon.infrastructure.redis.CouponIssueRedisRepository;
 import com.example.hhplus_ecommerce.coupon.infrastructure.repository.CouponRepository;
 import com.example.hhplus_ecommerce.coupon.infrastructure.repository.UserCouponRepository;
 import com.example.hhplus_ecommerce.user.infrastructure.UserRepository;
@@ -14,12 +15,10 @@ import com.example.hhplus_ecommerce.coupon.presentaion.dto.CouponDto.IssueCoupon
 import com.example.hhplus_ecommerce.coupon.presentaion.dto.CouponDto.UserCouponResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -30,12 +29,7 @@ public class CouponService {
     private final CouponRepository couponRepository;
     private final UserCouponRepository userCouponRepository;
     private final UserRepository userRepository;
-    private final StringRedisTemplate redisTemplate;
-
-    // Redis 키 패턴
-    private static final String COUPON_USER_SET_KEY = "coupon:user:%d";      // Set: 발급받은 사용자 목록
-    private static final String COUPON_STOCK_KEY = "coupon:stock:%d";         // String: 재고 수량
-    private static final String COUPON_QUEUE_KEY = "coupon:issue:queue:%d";   // List: 발급 대기 큐
+    private final CouponIssueRedisRepository couponIssueRedisRepository;
 
     public List<CouponResponse> getCoupons() {
         List<Coupon> coupons = couponRepository.findAll();
@@ -69,13 +63,8 @@ public class CouponService {
     public void issueCoupon(Long userId, IssueCouponRequest request) {
         Long couponId = request.couponId();
 
-        // Redis 키 생성
-        String userSetKey = String.format(COUPON_USER_SET_KEY, couponId);
-        String stockKey = String.format(COUPON_STOCK_KEY, couponId);
-        String queueKey = String.format(COUPON_QUEUE_KEY, couponId);
-
         // 1. Set에 userId 추가 (SADD - 원자적, 중복 시 0 반환)
-        Long added = redisTemplate.opsForSet().add(userSetKey, userId.toString());
+        Long added = couponIssueRedisRepository.addUserToIssuedSet(couponId, userId);
         if (added == null || added == 0) {
             log.warn("쿠폰 중복 발급 시도: userId={}, couponId={}", userId, couponId);
             throw new ConflictException(CouponErrorCode.COUPON_ALREADY_ISSUED);
@@ -83,30 +72,29 @@ public class CouponService {
 
         try {
             // 2. 재고 확인
-            String stockStr = redisTemplate.opsForValue().get(stockKey);
-            if (stockStr == null) {
-                redisTemplate.opsForSet().remove(userSetKey, userId.toString());
+            Long stock = couponIssueRedisRepository.getStock(couponId);
+            if (stock == null) {
+                couponIssueRedisRepository.removeUserFromIssuedSet(couponId, userId);
                 log.error("쿠폰 재고 캐시 없음: couponId={}", couponId);
                 throw new NotFoundException(CouponErrorCode.COUPON_NOT_FOUND);
             }
 
-            Long stock = Long.parseLong(stockStr);
-            Long currentSize = redisTemplate.opsForSet().size(userSetKey);
+            Long currentSize = couponIssueRedisRepository.getIssuedCount(couponId);
 
             log.info("쿠폰 발급 시도: userId={}, couponId={}, currentSize={}, stock={}",
                 userId, couponId, currentSize, stock);
 
             // 3. 재고 초과 검증
-            if (currentSize != null && currentSize > stock) {
-                redisTemplate.opsForSet().remove(userSetKey, userId.toString());
+            if (currentSize > stock) {
+                couponIssueRedisRepository.removeUserFromIssuedSet(couponId, userId);
                 log.warn("쿠폰 재고 부족: couponId={}, currentSize={}, stock={}",
                     couponId, currentSize, stock);
                 throw new ConflictException(CouponErrorCode.COUPON_SOLD_OUT);
             }
 
-            // 4. 발급 큐에 추가 (RPUSH - 원자적)
+            // 4. 발급 큐에 추가
             CouponIssueQueueItem queueItem = CouponIssueQueueItem.create(userId, couponId);
-            redisTemplate.opsForList().rightPush(queueKey, queueItem.toJson());
+            couponIssueRedisRepository.addToQueue(couponId, queueItem);
 
             log.info("쿠폰 발급 큐 추가 완료: userId={}, couponId={}", userId, couponId);
 
@@ -115,7 +103,7 @@ public class CouponService {
             throw e;
         } catch (Exception e) {
             // 예상치 못한 오류 시 롤백
-            redisTemplate.opsForSet().remove(userSetKey, userId.toString());
+            couponIssueRedisRepository.removeUserFromIssuedSet(couponId, userId);
             log.error("쿠폰 발급 중 예외 발생: userId={}, couponId={}", userId, couponId, e);
             throw e;
         }
@@ -141,19 +129,16 @@ public class CouponService {
     public void initializeCouponCache(Long couponId) {
         Coupon coupon = couponRepository.findByIdOrThrow(couponId);
 
-        String stockKey = String.format(COUPON_STOCK_KEY, couponId);
-        String userSetKey = String.format(COUPON_USER_SET_KEY, couponId);
-
         // 1. 재고 수량 설정
-        redisTemplate.opsForValue().set(stockKey, String.valueOf(coupon.getTotalQuantity()));
+        couponIssueRedisRepository.setStock(couponId, (long) coupon.getTotalQuantity());
 
         // 2. 기존 발급된 사용자 목록 복원
         List<UserCoupon> issuedUserCoupons = userCouponRepository.findByCoupon_Id(couponId);
         if (!issuedUserCoupons.isEmpty()) {
-            String[] userIds = issuedUserCoupons.stream()
-                .map(uc -> uc.getUserId().toString())
-                .toArray(String[]::new);
-            redisTemplate.opsForSet().add(userSetKey, userIds);
+            List<Long> userIds = issuedUserCoupons.stream()
+                .map(UserCoupon::getUserId)
+                .toList();
+            couponIssueRedisRepository.bulkAddUserToIssuedSet(couponId, userIds);
         }
 
         log.info("쿠폰 Redis 캐시 초기화: couponId={}, stock={}, issuedCount={}",
@@ -172,19 +157,18 @@ public class CouponService {
         List<Coupon> allCoupons = couponRepository.findAll();
 
         for (Coupon coupon : allCoupons) {
-            String stockKey = String.format(COUPON_STOCK_KEY, coupon.getId());
-            String userSetKey = String.format(COUPON_USER_SET_KEY, coupon.getId());
+            Long couponId = coupon.getId();
 
             // 1. 재고 수량 설정
-            redisTemplate.opsForValue().set(stockKey, String.valueOf(coupon.getTotalQuantity()));
+            couponIssueRedisRepository.setStock(couponId, (long) coupon.getTotalQuantity());
 
             // 2. 기존 발급된 사용자 목록 복원
-            List<UserCoupon> issuedUserCoupons = userCouponRepository.findByCoupon_Id(coupon.getId());
+            List<UserCoupon> issuedUserCoupons = userCouponRepository.findByCoupon_Id(couponId);
             if (!issuedUserCoupons.isEmpty()) {
-                String[] userIds = issuedUserCoupons.stream()
-                    .map(uc -> uc.getUserId().toString())
-                    .toArray(String[]::new);
-                redisTemplate.opsForSet().add(userSetKey, userIds);
+                List<Long> userIds = issuedUserCoupons.stream()
+                    .map(UserCoupon::getUserId)
+                    .toList();
+                couponIssueRedisRepository.bulkAddUserToIssuedSet(couponId, userIds);
             }
         }
 
@@ -195,10 +179,7 @@ public class CouponService {
      * 쿠폰 관련 Redis 캐시를 모두 삭제합니다.
      */
     public void clearCache() {
-        Set<String> keys = redisTemplate.keys("coupon:*");
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
-        }
+        couponIssueRedisRepository.clearAll();
         log.info("쿠폰 캐시 삭제 완료");
     }
 
@@ -206,7 +187,7 @@ public class CouponService {
      * 특정 쿠폰의 발급 큐 키를 반환합니다. (스케줄러에서 사용)
      */
     public String getQueueKey(Long couponId) {
-        return String.format(COUPON_QUEUE_KEY, couponId);
+        return couponIssueRedisRepository.getQueueKey(couponId);
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.example.hhplus_ecommerce.order.infrastructure;
 
-import com.example.hhplus_ecommerce.order.domain.Order;
+import com.example.hhplus_ecommerce.order.domain.model.Order;
 import com.example.hhplus_ecommerce.common.presentation.errorCode.OrderErrorCode;
 import com.example.hhplus_ecommerce.common.presentation.exception.NotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;

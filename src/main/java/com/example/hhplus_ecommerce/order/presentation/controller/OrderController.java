@@ -1,8 +1,8 @@
 package com.example.hhplus_ecommerce.order.presentation.controller;
 
-import com.example.hhplus_ecommerce.order.application.MakeOrderService;
-import com.example.hhplus_ecommerce.order.application.UserOrderService;
-import com.example.hhplus_ecommerce.order.application.MakePaymentUseCase;
+import com.example.hhplus_ecommerce.order.application.service.MakeOrderService;
+import com.example.hhplus_ecommerce.order.application.service.UserOrderService;
+import com.example.hhplus_ecommerce.order.application.usecase.MakePaymentUseCase;
 import com.example.hhplus_ecommerce.order.presentation.dto.OrderDto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

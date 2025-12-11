@@ -1,4 +1,4 @@
-package com.example.hhplus_ecommerce.order.application;
+package com.example.hhplus_ecommerce.order.application.service;
 
 import com.example.hhplus_ecommerce.cart.infrastructure.CartItemRepository;
 import com.example.hhplus_ecommerce.cart.model.CartItem;
@@ -11,8 +11,8 @@ import com.example.hhplus_ecommerce.common.presentation.errorCode.CouponErrorCod
 import com.example.hhplus_ecommerce.common.presentation.errorCode.ProductErrorCode;
 import com.example.hhplus_ecommerce.common.presentation.exception.ConflictException;
 import com.example.hhplus_ecommerce.common.presentation.exception.NotFoundException;
-import com.example.hhplus_ecommerce.order.domain.Order;
-import com.example.hhplus_ecommerce.order.domain.OrderItem;
+import com.example.hhplus_ecommerce.order.domain.model.Order;
+import com.example.hhplus_ecommerce.order.domain.model.OrderItem;
 import com.example.hhplus_ecommerce.order.infrastructure.OrderItemRepository;
 import com.example.hhplus_ecommerce.order.infrastructure.OrderRepository;
 import com.example.hhplus_ecommerce.order.presentation.dto.OrderDto.OrderRequest;

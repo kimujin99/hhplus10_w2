@@ -1,7 +1,7 @@
-package com.example.hhplus_ecommerce.order.application;
+package com.example.hhplus_ecommerce.order.application.service;
 
-import com.example.hhplus_ecommerce.order.domain.Order;
-import com.example.hhplus_ecommerce.order.domain.OrderItem;
+import com.example.hhplus_ecommerce.order.domain.model.Order;
+import com.example.hhplus_ecommerce.order.domain.model.OrderItem;
 import com.example.hhplus_ecommerce.order.infrastructure.OrderItemRepository;
 import com.example.hhplus_ecommerce.order.infrastructure.OrderRepository;
 import com.example.hhplus_ecommerce.user.infrastructure.UserRepository;

@@ -1,4 +1,4 @@
-package com.example.hhplus_ecommerce.order.domain;
+package com.example.hhplus_ecommerce.order.domain.model;
 
 import com.example.hhplus_ecommerce.common.model.BaseEntity;
 import jakarta.persistence.Column;
