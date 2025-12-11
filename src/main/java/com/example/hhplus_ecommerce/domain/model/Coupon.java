@@ -5,7 +5,6 @@ import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCod
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Version;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -25,9 +24,6 @@ public class Coupon extends BaseEntity {
     private Integer issuedQuantity;
     private LocalDateTime validFrom;
     private LocalDateTime validUntil;
-
-    @Version
-    protected Long version;
 
     public Integer getRemainingQuantity() {
         return this.totalQuantity - this.issuedQuantity;
