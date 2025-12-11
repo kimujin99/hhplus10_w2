@@ -18,8 +18,7 @@ public class Product extends BaseEntity {
     private Long price;
     private Integer originalStockQuantity;
     private Integer stockQuantity;
-    @ColumnDefault("0")
-    @Builder.Default
+    @ColumnDefault("0") @Builder.Default
     private Integer viewCount = 0;
 
     public void subStockQuantity(Integer stockQuantity) {
@@ -27,6 +26,10 @@ public class Product extends BaseEntity {
             throw new ConflictException(ProductErrorCode.INSUFFICIENT_STOCK);
         }
         this.stockQuantity -= stockQuantity;
+    }
+
+    public void addStockQuantity(Integer stockQuantity) {
+        this.stockQuantity += stockQuantity;
     }
 
     public boolean hasSufficientStock(Integer quantity) {

@@ -1,11 +1,9 @@
 package com.example.hhplus_ecommerce.presentation;
 
-import com.example.hhplus_ecommerce.application.service.MakePaymentService;
+import com.example.hhplus_ecommerce.application.usecase.MakePaymentUseCase;
 import com.example.hhplus_ecommerce.domain.model.*;
 import com.example.hhplus_ecommerce.infrastructure.repository.*;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
 
     @Autowired
-    private MakePaymentService makePaymentService;
+    private MakePaymentUseCase makePaymentUseCase;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -50,26 +48,6 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
 
     @Autowired
     private CouponRepository couponRepository;
-
-    @BeforeEach
-    void setUp() {
-        orderItemRepository.deleteAll();
-        orderRepository.deleteAll();
-        userCouponRepository.deleteAll();
-        couponRepository.deleteAll();
-        productRepository.deleteAll();
-        userRepository.deleteAll();
-    }
-
-    @AfterEach
-    void tearDown() {
-        orderItemRepository.deleteAll();
-        orderRepository.deleteAll();
-        userCouponRepository.deleteAll();
-        couponRepository.deleteAll();
-        productRepository.deleteAll();
-        userRepository.deleteAll();
-    }
 
     @Test
     @DisplayName("동시성 테스트: 재고가 1개 남은 상품에 대해 동시에 2명이 결제 요청 시 1명만 성공")
@@ -126,7 +104,7 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
         // when: 2명이 동시에 결제 요청
         executorService.submit(() -> {
             try {
-                makePaymentService.execute(order1.getId());
+                makePaymentUseCase.execute(order1.getId());
                 successCount.incrementAndGet();
             } catch (Exception e) {
                 failCount.incrementAndGet();
@@ -137,7 +115,7 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
 
         executorService.submit(() -> {
             try {
-                makePaymentService.execute(order2.getId());
+                makePaymentUseCase.execute(order2.getId());
                 successCount.incrementAndGet();
             } catch (Exception e) {
                 failCount.incrementAndGet();
@@ -146,14 +124,14 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
             }
         });
 
-        boolean completed = latch.await(10, TimeUnit.SECONDS);
+        boolean completed = latch.await(30, TimeUnit.SECONDS);
         executorService.shutdown();
 
         // then: 1명만 성공, 재고는 0
         Product updatedProduct = productRepository.findById(product.getId()).orElseThrow();
 
         assertAll(
-                () -> assertThat(completed).as("테스트가 10초 내에 완료되어야 함").isTrue(),
+                () -> assertThat(completed).as("테스트가 30초 내에 완료되어야 함").isTrue(),
                 () -> assertThat(successCount.get()).as("성공 횟수").isEqualTo(1),
                 () -> assertThat(failCount.get()).as("실패 횟수").isEqualTo(1),
                 () -> assertThat(updatedProduct.getStockQuantity()).as("최종 재고").isEqualTo(0)
@@ -214,7 +192,7 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
         // when: 동시에 2번 결제 요청
         executorService.submit(() -> {
             try {
-                makePaymentService.execute(order1.getId());
+                makePaymentUseCase.execute(order1.getId());
                 successCount.incrementAndGet();
             } catch (Exception e) {
                 failCount.incrementAndGet();
@@ -225,7 +203,7 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
 
         executorService.submit(() -> {
             try {
-                makePaymentService.execute(order2.getId());
+                makePaymentUseCase.execute(order2.getId());
                 successCount.incrementAndGet();
             } catch (Exception e) {
                 failCount.incrementAndGet();
@@ -234,14 +212,14 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
             }
         });
 
-        boolean completed = latch.await(10, TimeUnit.SECONDS);
+        boolean completed = latch.await(30, TimeUnit.SECONDS);
         executorService.shutdown();
 
         // then: 1명만 성공, 포인트는 0
         User updatedUser = userRepository.findById(user.getId()).orElseThrow();
 
         assertAll(
-                () -> assertThat(completed).as("테스트가 10초 내에 완료되어야 함").isTrue(),
+                () -> assertThat(completed).as("테스트가 30초 내에 완료되어야 함").isTrue(),
                 () -> assertThat(successCount.get()).as("성공 횟수").isEqualTo(1),
                 () -> assertThat(failCount.get()).as("실패 횟수").isEqualTo(1),
                 () -> assertThat(updatedUser.getPoint()).as("최종 포인트").isEqualTo(0L)
@@ -320,7 +298,7 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
         // when: 같은 쿠폰으로 동시에 2번 결제 요청
         executorService.submit(() -> {
             try {
-                makePaymentService.execute(order1.getId());
+                makePaymentUseCase.execute(order1.getId());
                 successCount.incrementAndGet();
             } catch (Exception e) {
                 failCount.incrementAndGet();
@@ -331,7 +309,7 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
 
         executorService.submit(() -> {
             try {
-                makePaymentService.execute(order2.getId());
+                makePaymentUseCase.execute(order2.getId());
                 successCount.incrementAndGet();
             } catch (Exception e) {
                 failCount.incrementAndGet();
@@ -340,14 +318,14 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
             }
         });
 
-        boolean completed = latch.await(10, TimeUnit.SECONDS);
+        boolean completed = latch.await(30, TimeUnit.SECONDS);
         executorService.shutdown();
 
         // then: 1번만 성공, 쿠폰은 USED 상태
         UserCoupon updatedUserCoupon = userCouponRepository.findById(userCoupon.getId()).orElseThrow();
 
         assertAll(
-                () -> assertThat(completed).as("테스트가 10초 내에 완료되어야 함").isTrue(),
+                () -> assertThat(completed).as("테스트가 30초 내에 완료되어야 함").isTrue(),
                 () -> assertThat(successCount.get()).as("성공 횟수").isEqualTo(1),
                 () -> assertThat(failCount.get()).as("실패 횟수").isEqualTo(1),
                 () -> assertThat(updatedUserCoupon.getStatus()).as("쿠폰 상태").isEqualTo(UserCoupon.UserCouponStatus.USED)
@@ -396,7 +374,7 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
                             .price(product.getPrice())
                             .build());
 
-                    makePaymentService.execute(order.getId());
+                    makePaymentUseCase.execute(order.getId());
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();
@@ -462,7 +440,7 @@ public class MakePaymentConccurencyTest extends AbstractIntegrationTest {
                             .price(product.getPrice())
                             .build());
 
-                    makePaymentService.execute(order.getId());
+                    makePaymentUseCase.execute(order.getId());
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();

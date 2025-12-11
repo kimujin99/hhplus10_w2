@@ -14,8 +14,7 @@ import org.hibernate.annotations.ColumnDefault;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
 public class User extends BaseEntity {
-    @ColumnDefault("0L")
-    @Builder.Default
+    @ColumnDefault("0L") @Builder.Default
     private Long point = 0L;
 
     private static int CHARGE_AMOUNT_POLICY = 1000;

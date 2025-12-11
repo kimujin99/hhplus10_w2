@@ -1,8 +1,8 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.MakeOrderService;
-import com.example.hhplus_ecommerce.application.service.MakePaymentService;
 import com.example.hhplus_ecommerce.application.service.UserOrderService;
+import com.example.hhplus_ecommerce.application.usecase.MakePaymentUseCase;
 import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
 import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
 import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
@@ -42,7 +42,7 @@ class OrderControllerTest {
     private MakeOrderService makeOrderService;
 
     @MockitoBean
-    private MakePaymentService makePaymentService;
+    private MakePaymentUseCase makePaymentUseCase;
 
     @MockitoBean
     private UserOrderService userOrderService;
@@ -233,7 +233,7 @@ class OrderControllerTest {
                 "CONFIRMED",
                 LocalDateTime.now()
         );
-        when(makePaymentService.execute(anyLong())).thenReturn(response);
+        when(makePaymentUseCase.execute(anyLong())).thenReturn(response);
 
         // when & then
         mockMvc.perform(post("/api/v1/orders/{orderId}/payments", orderId))
@@ -249,7 +249,7 @@ class OrderControllerTest {
     void makePayment_FailInsufficientPoint() throws Exception {
         // given
         Long orderId = 1L;
-        when(makePaymentService.execute(anyLong()))
+        when(makePaymentUseCase.execute(anyLong()))
                 .thenThrow(new ConflictException(PointErrorCode.INSUFFICIENT_POINT));
 
         // when & then
@@ -265,7 +265,7 @@ class OrderControllerTest {
     void makePayment_FailOrderNotFound() throws Exception {
         // given
         Long orderId = 999L;
-        when(makePaymentService.execute(anyLong()))
+        when(makePaymentUseCase.execute(anyLong()))
                 .thenThrow(new NotFoundException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // when & then

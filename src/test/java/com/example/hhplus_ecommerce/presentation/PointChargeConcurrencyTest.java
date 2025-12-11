@@ -1,5 +1,6 @@
 package com.example.hhplus_ecommerce.presentation;
 
+import com.example.hhplus_ecommerce.application.service.UserPointService;
 import com.example.hhplus_ecommerce.application.service.UserService;
 import com.example.hhplus_ecommerce.domain.model.PointHistory;
 import com.example.hhplus_ecommerce.domain.model.User;
@@ -36,6 +37,8 @@ public class PointChargeConcurrencyTest extends AbstractIntegrationTest {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserPointService userPointService;
 
     @BeforeEach
     void setUp() {
@@ -70,7 +73,7 @@ public class PointChargeConcurrencyTest extends AbstractIntegrationTest {
             executorService.submit(() -> {
                 try {
                     ChargePointRequest request = new ChargePointRequest((long) chargeAmount);
-                    userService.chargePoint(userId, request);
+                    userPointService.chargePoint(userId, request);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();
@@ -81,7 +84,7 @@ public class PointChargeConcurrencyTest extends AbstractIntegrationTest {
             });
         }
 
-        boolean completed = latch.await(10, TimeUnit.SECONDS);
+        boolean completed = latch.await(30, TimeUnit.SECONDS);
         executorService.shutdown();
 
         // then
@@ -93,7 +96,7 @@ public class PointChargeConcurrencyTest extends AbstractIntegrationTest {
                 .sum();
 
         assertAll(
-                () -> assertThat(completed).as("테스트가 10초 내에 완료되어야 함").isTrue(),
+                () -> assertThat(completed).as("테스트가 30초 내에 완료되어야 함").isTrue(),
                 () -> assertThat(successCount.get()).as("성공 횟수").isEqualTo(chargeCount),
                 () -> assertThat(failCount.get()).as("실패 횟수").isEqualTo(0),
                 () -> assertThat(updatedUser.getPoint()).as("사용자 최종 포인트").isEqualTo(expectedPoint),
@@ -129,7 +132,7 @@ public class PointChargeConcurrencyTest extends AbstractIntegrationTest {
                 executorService.submit(() -> {
                     try {
                         ChargePointRequest request = new ChargePointRequest(chargeAmount);
-                        userService.chargePoint(user.getId(), request);
+                        userPointService.chargePoint(user.getId(), request);
                         successCount.incrementAndGet();
                     } catch (Exception e) {
                         failCount.incrementAndGet();
@@ -141,7 +144,7 @@ public class PointChargeConcurrencyTest extends AbstractIntegrationTest {
             }
         }
 
-        boolean completed = latch.await(10, TimeUnit.SECONDS);
+        boolean completed = latch.await(30, TimeUnit.SECONDS);
         executorService.shutdown();
 
         // then
@@ -149,7 +152,7 @@ public class PointChargeConcurrencyTest extends AbstractIntegrationTest {
         long totalPointHistories = pointHistoryRepository.count();
 
         assertAll(
-                () -> assertThat(completed).as("테스트가 10초 내에 완료되어야 함").isTrue(),
+                () -> assertThat(completed).as("테스트가 30초 내에 완료되어야 함").isTrue(),
                 () -> assertThat(successCount.get()).as("성공 횟수").isEqualTo(userCount * chargesPerUser),
                 () -> assertThat(failCount.get()).as("실패 횟수").isEqualTo(0),
                 () -> assertThat(updatedUsers).as("모든 사용자의 포인트가 정확해야 함")

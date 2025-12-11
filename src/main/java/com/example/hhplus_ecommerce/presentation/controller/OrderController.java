@@ -1,8 +1,8 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
 import com.example.hhplus_ecommerce.application.service.MakeOrderService;
-import com.example.hhplus_ecommerce.application.service.MakePaymentService;
 import com.example.hhplus_ecommerce.application.service.UserOrderService;
+import com.example.hhplus_ecommerce.application.usecase.MakePaymentUseCase;
 import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import java.util.List;
 public class OrderController {
 
     private final MakeOrderService makeOrderService;
-    private final MakePaymentService makePaymentService;
+    private final MakePaymentUseCase makePaymentUseCase;
     private final UserOrderService userOrderService;
 
     @PostMapping("/orders")
@@ -46,6 +46,6 @@ public class OrderController {
     public ResponseEntity<PaymentResponse> makePayment (
             @PathVariable("orderId") Long orderId
     ) {
-        return ResponseEntity.ok(makePaymentService.execute(orderId));
+        return ResponseEntity.ok(makePaymentUseCase.execute(orderId));
     }
 }

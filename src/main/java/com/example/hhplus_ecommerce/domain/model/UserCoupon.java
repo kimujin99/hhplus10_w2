@@ -24,11 +24,18 @@ public class UserCoupon extends BaseEntity {
     @JoinColumn(nullable = false)
     private Coupon coupon;
 
+    @Version
+    private Long version;
+
     public void use() {
         if(isUsed()) {
             throw new ConflictException(CouponErrorCode.COUPON_ALREADY_USED);
         }
         this.status = UserCouponStatus.USED;
+    }
+
+    public void cancelUse() {
+        this.status = UserCouponStatus.ISSUED;
     }
 
     public boolean isUsed() {

@@ -4,7 +4,6 @@ import com.example.hhplus_ecommerce.domain.model.PointHistory;
 import com.example.hhplus_ecommerce.domain.model.User;
 import com.example.hhplus_ecommerce.infrastructure.repository.PointHistoryRepository;
 import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.dto.UserDto.ChargePointRequest;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.PointHistoryResponse;
 import com.example.hhplus_ecommerce.presentation.dto.UserDto.PointResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,23 +29,5 @@ public class UserService {
         userRepository.findByIdOrThrow(userId);
         List<PointHistory> pointHistories = pointHistoryRepository.findByUserId(userId);
         return PointHistoryResponse.fromList(pointHistories);
-    }
-
-    @Transactional
-    public PointResponse chargePoint(Long userId, ChargePointRequest request) {
-        User user = userRepository.findByIdWithLockOrThrow(userId);
-
-        user.chargePoint(request.amount());
-        User savedUser = userRepository.save(user);
-
-        PointHistory pointHistory = PointHistory.builder()
-                .userId(userId)
-                .transactionType(PointHistory.TransactionType.CHARGE)
-                .amount(request.amount())
-                .balanceAfter(savedUser.getPoint())
-                .build();
-        pointHistoryRepository.save(pointHistory);
-
-        return PointResponse.from(savedUser);
     }
 }
