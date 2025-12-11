@@ -1,16 +1,16 @@
 package com.example.hhplus_ecommerce.application.service;
 
-import com.example.hhplus_ecommerce.domain.model.Order;
-import com.example.hhplus_ecommerce.domain.model.OrderItem;
-import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.infrastructure.repository.OrderItemRepository;
-import com.example.hhplus_ecommerce.infrastructure.repository.OrderRepository;
-import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
-import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
+import com.example.hhplus_ecommerce.order.domain.Order;
+import com.example.hhplus_ecommerce.order.domain.OrderItem;
+import com.example.hhplus_ecommerce.order.application.UserOrderService;
+import com.example.hhplus_ecommerce.user.domain.User;
+import com.example.hhplus_ecommerce.order.infrastructure.OrderItemRepository;
+import com.example.hhplus_ecommerce.order.infrastructure.OrderRepository;
+import com.example.hhplus_ecommerce.user.infrastructure.UserRepository;
+import com.example.hhplus_ecommerce.common.presentation.exception.NotFoundException;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.OrderErrorCode;
+import com.example.hhplus_ecommerce.order.presentation.dto.OrderDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;

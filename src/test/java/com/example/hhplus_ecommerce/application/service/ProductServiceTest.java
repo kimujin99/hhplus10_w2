@@ -1,11 +1,11 @@
 package com.example.hhplus_ecommerce.application.service;
 
-import com.example.hhplus_ecommerce.domain.model.Product;
-import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
-import com.example.hhplus_ecommerce.presentation.common.exception.BaseException;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
-import com.example.hhplus_ecommerce.presentation.dto.ProductDto.*;
+import com.example.hhplus_ecommerce.product.application.ProductService;
+import com.example.hhplus_ecommerce.product.domain.Product;
+import com.example.hhplus_ecommerce.product.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.common.presentation.exception.NotFoundException;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.product.presentation.dto.ProductDto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertAll;

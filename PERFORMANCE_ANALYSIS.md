@@ -341,7 +341,7 @@ spring:
 ```java
 // OrderRepository.java
 @Query("""
-    SELECT new com.example.hhplus_ecommerce.presentation.dto.OrderDto$OrderWithItemsDto(
+    SELECT new com.example.hhplus_ecommerce.order.presentation.dto.OrderDto$OrderWithItemsDto(
         o.id, o.userId, o.totalAmount,
         oi.id, oi.productId, oi.quantity, oi.price
     )

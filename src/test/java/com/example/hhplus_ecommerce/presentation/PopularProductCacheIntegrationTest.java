@@ -1,13 +1,13 @@
 package com.example.hhplus_ecommerce.presentation;
 
-import com.example.hhplus_ecommerce.application.service.PopularProductCacheService;
-import com.example.hhplus_ecommerce.domain.model.Product;
-import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
-import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.dto.CartDto.AddCartItemRequest;
-import com.example.hhplus_ecommerce.presentation.dto.OrderDto.OrderRequest;
-import com.example.hhplus_ecommerce.presentation.dto.UserDto.ChargePointRequest;
+import com.example.hhplus_ecommerce.product.application.PopularProductCacheService;
+import com.example.hhplus_ecommerce.product.domain.Product;
+import com.example.hhplus_ecommerce.user.domain.User;
+import com.example.hhplus_ecommerce.product.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.user.infrastructure.UserRepository;
+import com.example.hhplus_ecommerce.cart.presentation.dto.CartDto.AddCartItemRequest;
+import com.example.hhplus_ecommerce.order.presentation.dto.OrderDto.OrderRequest;
+import com.example.hhplus_ecommerce.user.presentation.dto.UserDto.ChargePointRequest;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;

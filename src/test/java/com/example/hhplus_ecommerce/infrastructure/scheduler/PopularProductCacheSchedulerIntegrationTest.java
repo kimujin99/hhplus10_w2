@@ -1,8 +1,9 @@
 package com.example.hhplus_ecommerce.infrastructure.scheduler;
 
-import com.example.hhplus_ecommerce.domain.model.Product;
-import com.example.hhplus_ecommerce.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.product.domain.Product;
+import com.example.hhplus_ecommerce.product.infrastructure.repository.ProductRepository;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
+import com.example.hhplus_ecommerce.product.infrastructure.scheduler.PopularProductCacheScheduler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

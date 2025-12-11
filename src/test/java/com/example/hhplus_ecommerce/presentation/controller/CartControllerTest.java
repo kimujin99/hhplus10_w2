@@ -1,11 +1,11 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
-import com.example.hhplus_ecommerce.application.service.CartService;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
-import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
-import com.example.hhplus_ecommerce.presentation.dto.CartDto.*;
+import com.example.hhplus_ecommerce.cart.application.CartService;
+import com.example.hhplus_ecommerce.cart.presentation.controller.CartController;
+import com.example.hhplus_ecommerce.common.presentation.exception.NotFoundException;
+import com.example.hhplus_ecommerce.common.presentation.exception.ConflictException;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.CartErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

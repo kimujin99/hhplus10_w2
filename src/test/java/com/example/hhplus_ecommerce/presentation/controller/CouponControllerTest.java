@@ -1,11 +1,12 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
-import com.example.hhplus_ecommerce.application.service.CouponService;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
-import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.CouponErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
-import com.example.hhplus_ecommerce.presentation.dto.CouponDto.*;
+import com.example.hhplus_ecommerce.coupon.application.CouponService;
+import com.example.hhplus_ecommerce.common.presentation.exception.NotFoundException;
+import com.example.hhplus_ecommerce.common.presentation.exception.ConflictException;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.CouponErrorCode;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.coupon.presentaion.controller.CouponController;
+import com.example.hhplus_ecommerce.coupon.presentaion.dto.CouponDto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
