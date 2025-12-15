@@ -1,9 +1,19 @@
 package com.example.hhplus_ecommerce.presentation;
 
-import com.example.hhplus_ecommerce.application.usecase.MakePaymentUseCase;
-import com.example.hhplus_ecommerce.domain.model.*;
-import com.example.hhplus_ecommerce.infrastructure.repository.*;
+import com.example.hhplus_ecommerce.order.application.MakePaymentUseCase;
+import com.example.hhplus_ecommerce.coupon.domain.Coupon;
+import com.example.hhplus_ecommerce.coupon.domain.UserCoupon;
+import com.example.hhplus_ecommerce.coupon.infrastructure.repository.CouponRepository;
+import com.example.hhplus_ecommerce.coupon.infrastructure.repository.UserCouponRepository;
+import com.example.hhplus_ecommerce.order.domain.Order;
+import com.example.hhplus_ecommerce.order.domain.OrderItem;
+import com.example.hhplus_ecommerce.order.infrastructure.OrderItemRepository;
+import com.example.hhplus_ecommerce.order.infrastructure.OrderRepository;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
+import com.example.hhplus_ecommerce.product.domain.Product;
+import com.example.hhplus_ecommerce.product.infrastructure.repository.ProductRepository;
+import com.example.hhplus_ecommerce.user.infrastructure.UserRepository;
+import com.example.hhplus_ecommerce.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

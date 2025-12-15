@@ -1,6 +1,7 @@
 package com.example.hhplus_ecommerce.infrastructure.scheduler;
 
-import com.example.hhplus_ecommerce.application.service.PopularProductCacheService;
+import com.example.hhplus_ecommerce.product.application.PopularProductCacheService;
+import com.example.hhplus_ecommerce.product.infrastructure.scheduler.PopularProductCacheScheduler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

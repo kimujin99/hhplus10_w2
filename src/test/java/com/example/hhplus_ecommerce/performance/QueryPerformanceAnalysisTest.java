@@ -1,8 +1,9 @@
 package com.example.hhplus_ecommerce.performance;
 
-import com.example.hhplus_ecommerce.domain.model.OrderItem;
-import com.example.hhplus_ecommerce.domain.model.Order;
-import com.example.hhplus_ecommerce.infrastructure.repository.*;
+import com.example.hhplus_ecommerce.order.domain.OrderItem;
+import com.example.hhplus_ecommerce.order.domain.Order;
+import com.example.hhplus_ecommerce.order.infrastructure.OrderItemRepository;
+import com.example.hhplus_ecommerce.order.infrastructure.OrderRepository;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
 import com.example.hhplus_ecommerce.presentation.utils.testDataGenerator;
 import jakarta.persistence.EntityManager;

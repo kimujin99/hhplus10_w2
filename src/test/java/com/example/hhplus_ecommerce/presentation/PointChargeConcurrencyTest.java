@@ -1,12 +1,12 @@
 package com.example.hhplus_ecommerce.presentation;
 
-import com.example.hhplus_ecommerce.application.service.UserPointService;
-import com.example.hhplus_ecommerce.application.service.UserService;
-import com.example.hhplus_ecommerce.domain.model.PointHistory;
-import com.example.hhplus_ecommerce.domain.model.User;
-import com.example.hhplus_ecommerce.infrastructure.repository.PointHistoryRepository;
-import com.example.hhplus_ecommerce.infrastructure.repository.UserRepository;
-import com.example.hhplus_ecommerce.presentation.dto.UserDto.ChargePointRequest;
+import com.example.hhplus_ecommerce.user.application.UserPointService;
+import com.example.hhplus_ecommerce.user.application.UserService;
+import com.example.hhplus_ecommerce.user.domain.PointHistory;
+import com.example.hhplus_ecommerce.user.domain.User;
+import com.example.hhplus_ecommerce.user.infrastructure.PointHistoryRepository;
+import com.example.hhplus_ecommerce.user.infrastructure.UserRepository;
+import com.example.hhplus_ecommerce.user.presentation.dto.UserDto.ChargePointRequest;
 import com.example.hhplus_ecommerce.presentation.utils.AbstractIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

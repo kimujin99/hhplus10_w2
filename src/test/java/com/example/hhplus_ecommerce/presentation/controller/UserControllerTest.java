@@ -1,12 +1,13 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
-import com.example.hhplus_ecommerce.application.service.UserPointService;
-import com.example.hhplus_ecommerce.application.service.UserService;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
-import com.example.hhplus_ecommerce.presentation.common.exception.BadRequestException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.UserErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
-import com.example.hhplus_ecommerce.presentation.dto.UserDto.*;
+import com.example.hhplus_ecommerce.user.application.UserPointService;
+import com.example.hhplus_ecommerce.user.application.UserService;
+import com.example.hhplus_ecommerce.common.presentation.exception.NotFoundException;
+import com.example.hhplus_ecommerce.common.presentation.exception.BadRequestException;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.UserErrorCode;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.PointErrorCode;
+import com.example.hhplus_ecommerce.user.presentation.controller.UserController;
+import com.example.hhplus_ecommerce.user.presentation.dto.UserDto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

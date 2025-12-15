@@ -1,15 +1,16 @@
 package com.example.hhplus_ecommerce.presentation.controller;
 
-import com.example.hhplus_ecommerce.application.service.MakeOrderService;
-import com.example.hhplus_ecommerce.application.service.UserOrderService;
-import com.example.hhplus_ecommerce.application.usecase.MakePaymentUseCase;
-import com.example.hhplus_ecommerce.presentation.common.exception.NotFoundException;
-import com.example.hhplus_ecommerce.presentation.common.exception.ConflictException;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.CartErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.ProductErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.OrderErrorCode;
-import com.example.hhplus_ecommerce.presentation.common.errorCode.PointErrorCode;
-import com.example.hhplus_ecommerce.presentation.dto.OrderDto.*;
+import com.example.hhplus_ecommerce.order.application.MakeOrderService;
+import com.example.hhplus_ecommerce.order.application.UserOrderService;
+import com.example.hhplus_ecommerce.order.application.MakePaymentUseCase;
+import com.example.hhplus_ecommerce.common.presentation.exception.NotFoundException;
+import com.example.hhplus_ecommerce.common.presentation.exception.ConflictException;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.CartErrorCode;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.ProductErrorCode;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.OrderErrorCode;
+import com.example.hhplus_ecommerce.common.presentation.errorCode.PointErrorCode;
+import com.example.hhplus_ecommerce.order.presentation.controller.OrderController;
+import com.example.hhplus_ecommerce.order.presentation.dto.OrderDto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
